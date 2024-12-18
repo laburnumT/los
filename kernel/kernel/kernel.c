@@ -3,6 +3,6 @@
 #include <kernel/tty.h>
 
 void kernel_main(void) {
-	terminal_initialize();
-	puts("Hello, kernel World!\n");
+	tty_initialize();
+	puts("Hello, kernel World!\nNew\tline\n");
 }

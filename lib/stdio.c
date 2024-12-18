@@ -7,7 +7,7 @@
 int putchar(int c)
 {
 #ifdef __is_libk
-        terminal_write(&(char){(char)c}, 1);
+        tty_write(&(char){(char)c}, 1);
 #else
         #error NOT IMPLEMENTED
 #endif

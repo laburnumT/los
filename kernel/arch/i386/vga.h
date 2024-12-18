@@ -1,5 +1,5 @@
-#ifndef ARCH_I386_VGA_H
-#define ARCH_I386_VGA_H
+#ifndef LOS_KERNEL_ARCH_I386_VGA_H
+#define LOS_KERNEL_ARCH_I386_VGA_H
 
 #include <stdint.h>
 
