@@ -1,0 +1,7 @@
+*.swp
+.cache/
+compile_commands.json
+
+*.iso
+isodir
+sysroot

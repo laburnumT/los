@@ -1,0 +1,58 @@
+#include "string.h"
+
+size_t strlen(const char *str)
+{
+        size_t len = 0;
+        for (; *str++;)
+                ++len;
+        return len;
+}
+
+void *memcpy(void *restrict dest, const void *restrict src, size_t n)
+{
+        unsigned char *d       = dest;
+        const unsigned char *s = src;
+        for (size_t i = 0; i < n; ++i)
+                d[i] = s[i];
+        return dest;
+}
+
+void *memccpy(void *restrict dest, const void *restrict src, int c, size_t n)
+{
+        unsigned char *d       = dest;
+        const unsigned char *s = src;
+        for (size_t i = 0; i < n; ++i) {
+                d[i] = s[i];
+                if (s[i] == (unsigned char)c)
+                        return d + i + 1;
+        }
+        return NULL;
+}
+
+char *strcpy(char *restrict dest, const char *restrict src)
+{
+        char *tmp = dest;
+        for (; (*dest++ = *src++);)
+                ;
+        return tmp;
+}
+
+void *memset(void *s, int c, size_t n)
+{
+        unsigned char *s_cpy = s;
+        for (size_t i = 0; i < n; ++i)
+                s_cpy[i] = (unsigned char)c;
+        return s;
+}
+
+int memcmp(const void *s1, const void *s2, size_t n)
+{
+        const unsigned char *c1 = s1;
+        const unsigned char *c2 = s2;
+        for (size_t i = 0; i < n; ++i) {
+                if (c1[i] == c2[i])
+                        continue;
+                return c1[i] - c2[i];
+        }
+        return 0;
+}
