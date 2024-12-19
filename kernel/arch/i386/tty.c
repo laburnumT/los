@@ -8,11 +8,6 @@
 
 #include "vga.h"
 
-static const size_t VGA_WIDTH  = 80;
-static const size_t VGA_HEIGHT = 25;
-static volatile struct vga_entry *const VGA_MEMORY =
-    (struct vga_entry *)0xB8000;
-
 static size_t terminal_row;
 static size_t terminal_column;
 static struct vga_entry_colour terminal_colour;

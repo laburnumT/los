@@ -1,7 +1,13 @@
 #ifndef LOS_KERNEL_ARCH_I386_VGA_H
 #define LOS_KERNEL_ARCH_I386_VGA_H
 
+#include <stddef.h>
 #include <stdint.h>
+
+static const size_t VGA_WIDTH  = 80;
+static const size_t VGA_HEIGHT = 25;
+static volatile struct vga_entry *const VGA_MEMORY =
+    (struct vga_entry *)0xB8000;
 
 enum vga_colour {
         VGA_COLOR_BLACK         = 0,
