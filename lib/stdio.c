@@ -36,7 +36,7 @@ int int_to_str(char *buffer, int num)
 int putchar(int c)
 {
 #ifdef __is_libk
-        tty_write(&(char){(char)c}, 1);
+        tty_putchar((char)c);
 #else
         #error NOT IMPLEMENTED
 #endif
