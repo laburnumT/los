@@ -1,8 +1,37 @@
 #include <stdio.h>
 
+#include <stdarg.h>
+#include <stdint.h>
+
 #ifdef __is_libk
         #include <kernel/tty.h>
 #endif
+
+int int_to_str(char *buffer, int num)
+{
+        if (!num) {
+                buffer[0] = '0';
+                buffer[1] = '\0';
+                return 1;
+        }
+        uint8_t is_neg = num < 0;
+        size_t cnt     = 0;
+        if (is_neg)
+                num = -num;
+        for (cnt = 0; num > 0; num /= 10)
+                buffer[cnt++] = (char)(num % 10 + '0');
+        if (is_neg)
+                buffer[cnt++] = '-';
+
+        for (size_t i = 0; i < cnt / 2; ++i) {
+                char tmp            = buffer[i];
+                buffer[i]           = buffer[cnt - i - 1];
+                buffer[cnt - i - 1] = tmp;
+        }
+        buffer[cnt++] = '\0';
+
+        return (int)cnt;
+}
 
 int putchar(int c)
 {
@@ -22,4 +51,44 @@ int puts(const char *s)
         }
 
         return 0;
+}
+
+int printf(const char *restrict format, ...)
+{
+        va_list args;
+        va_start(args, format);
+        size_t cnt = 0;
+
+        for (cnt = 0; *format; ++format) {
+                if (*format != '%') {
+                        putchar(*format);
+                        continue;
+                }
+                ++format;
+                switch (*format) {
+                case '%':
+                        putchar(*format);
+                        break;
+                case 'd': {
+                        char buff[10];
+                        int_to_str(buff, va_arg(args, int));
+                        puts(buff);
+                        break;
+                case 'c':
+                        putchar(va_arg(args, int));
+                        break;
+                case 's':
+                        puts(va_arg(args, char *));
+                        break;
+                default:
+                        putchar('%');
+                        putchar(*format);
+                        break;
+                }
+                }
+        }
+
+        va_end(args);
+
+        return (int)cnt;
 }
