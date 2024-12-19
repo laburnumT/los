@@ -8,14 +8,15 @@
 
 #include "vga.h"
 
-static const size_t VGA_WIDTH             = 80;
-static const size_t VGA_HEIGHT            = 25;
-static struct vga_entry *const VGA_MEMORY = (struct vga_entry *)0xB8000;
+static const size_t VGA_WIDTH  = 80;
+static const size_t VGA_HEIGHT = 25;
+static volatile struct vga_entry *const VGA_MEMORY =
+    (struct vga_entry *)0xB8000;
 
 static size_t terminal_row;
 static size_t terminal_column;
 static struct vga_entry_colour terminal_colour;
-static struct vga_entry *terminal_buffer;
+static volatile struct vga_entry *terminal_buffer;
 
 void tty_initialize(void)
 {
@@ -65,11 +66,13 @@ void tty_putchar(char c)
         if (terminal_row == VGA_HEIGHT) {
                 --terminal_row;
                 for (size_t row = 1; row < VGA_HEIGHT; ++row) {
-                        const size_t index_dest = (row - 1) * VGA_WIDTH;
-                        const size_t index_src  = row * VGA_WIDTH;
-                        memcpy(terminal_buffer + index_dest,
-                               terminal_buffer + index_src,
-                               VGA_WIDTH);
+                        for (size_t col = 0; col < VGA_WIDTH; ++col) {
+                                const size_t index_dest =
+                                    (row - 1) * VGA_WIDTH + col;
+                                const size_t index_src = row * VGA_WIDTH + col;
+                                terminal_buffer[index_dest] =
+                                    terminal_buffer[index_src];
+                        }
                 }
                 for (size_t x = 0; x < VGA_WIDTH; x++) {
                         const size_t index = (VGA_HEIGHT - 1) * VGA_WIDTH + x;
