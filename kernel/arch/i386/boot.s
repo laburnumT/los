@@ -1,3 +1,5 @@
+.intel_syntax noprefix
+
 # Declare constants for the multiboot header.
 .set ALIGN,    1<<0             # align loaded modules on page boundaries
 .set MEMINFO,  1<<1             # provide memory map
@@ -24,7 +26,7 @@ stack_top:
 .global _start
 .type _start, @function
 _start:
-	movl $stack_top, %esp
+	lea esp, [stack_top]
 
 	# Call the global constructors.
 	call _init
