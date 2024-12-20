@@ -23,22 +23,22 @@ enum vga_register_index : uint8_t {
 };
 
 enum vga_colour : uint8_t {
-        VGA_COLOR_BLACK         = 0,
-        VGA_COLOR_BLUE          = 1,
-        VGA_COLOR_GREEN         = 2,
-        VGA_COLOR_CYAN          = 3,
-        VGA_COLOR_RED           = 4,
-        VGA_COLOR_MAGENTA       = 5,
-        VGA_COLOR_BROWN         = 6,
-        VGA_COLOR_LIGHT_GREY    = 7,
-        VGA_COLOR_DARK_GREY     = 8,
-        VGA_COLOR_LIGHT_BLUE    = 9,
-        VGA_COLOR_LIGHT_GREEN   = 10,
-        VGA_COLOR_LIGHT_CYAN    = 11,
-        VGA_COLOR_LIGHT_RED     = 12,
-        VGA_COLOR_LIGHT_MAGENTA = 13,
-        VGA_COLOR_LIGHT_BROWN   = 14,
-        VGA_COLOR_WHITE         = 15,
+        VGA_COLOUR_BLACK         = 0,
+        VGA_COLOUR_BLUE          = 1,
+        VGA_COLOUR_GREEN         = 2,
+        VGA_COLOUR_CYAN          = 3,
+        VGA_COLOUR_RED           = 4,
+        VGA_COLOUR_MAGENTA       = 5,
+        VGA_COLOUR_BROWN         = 6,
+        VGA_COLOUR_LIGHT_GREY    = 7,
+        VGA_COLOUR_DARK_GREY     = 8,
+        VGA_COLOUR_LIGHT_BLUE    = 9,
+        VGA_COLOUR_LIGHT_GREEN   = 10,
+        VGA_COLOUR_LIGHT_CYAN    = 11,
+        VGA_COLOUR_LIGHT_RED     = 12,
+        VGA_COLOUR_LIGHT_MAGENTA = 13,
+        VGA_COLOUR_LIGHT_BROWN   = 14,
+        VGA_COLOUR_WHITE         = 15,
 };
 
 struct vga_entry {
