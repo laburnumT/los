@@ -10,7 +10,7 @@
 
 static size_t terminal_row;
 static size_t terminal_column;
-static struct vga_entry_colour terminal_colour;
+static uint8_t terminal_colour;
 static volatile struct vga_entry *terminal_buffer;
 
 void tty_initialize(void)
@@ -29,8 +29,7 @@ void tty_initialize(void)
         }
 }
 
-static void tty_putentryat(unsigned char c, struct vga_entry_colour colour,
-                           size_t x, size_t y)
+static void tty_putentryat(unsigned char c, uint8_t colour, size_t x, size_t y)
 {
         const size_t index     = y * VGA_WIDTH + x;
         terminal_buffer[index] = vga_entry(c, colour);

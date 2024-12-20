@@ -28,30 +28,22 @@ enum vga_colour {
         VGA_COLOR_WHITE         = 15,
 };
 
-struct vga_entry_colour {
-        uint8_t foreground : 4;
-        uint8_t background : 3;
-        uint8_t blink : 1;
-};
-
 struct vga_entry {
         uint8_t c;
-        struct vga_entry_colour colour;
+        uint8_t colour;
 };
 
-inline static struct vga_entry_colour
-vga_entry_colour(enum vga_colour fg, enum vga_colour bg, uint8_t blink)
+inline static uint8_t vga_entry_colour(enum vga_colour fg, enum vga_colour bg,
+                                       uint8_t blink)
 {
-        return (struct vga_entry_colour){
-            .foreground = fg, .background = bg, .blink = blink};
+        return (blink << 7) | (bg << 4) | fg;
 }
 
-inline static struct vga_entry vga_entry(unsigned char uc,
-                                         struct vga_entry_colour color)
+inline static struct vga_entry vga_entry(unsigned char uc, uint8_t colour)
 {
         return (struct vga_entry){
             .c      = uc,
-            .colour = color,
+            .colour = colour,
         };
 }
 
