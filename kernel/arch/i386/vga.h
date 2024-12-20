@@ -7,7 +7,7 @@
 static const size_t VGA_WIDTH  = 80;
 static const size_t VGA_HEIGHT = 25;
 static volatile struct vga_entry *const VGA_MEMORY =
-    (struct vga_entry *)0xB8000;
+    (struct vga_entry *)0xC03FF000;
 static const uint16_t VGA_ADDRESS_REGISTER = 0x3D4;
 static const uint16_t VGA_DATA_REGISTER    = 0x3D5;
 

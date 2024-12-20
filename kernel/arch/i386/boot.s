@@ -8,24 +8,98 @@
 .set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
 
 # Declare a header as in the Multiboot Standard.
-.section .multiboot
+.section .multiboot.data, "aw"
 .align 4
 .long MAGIC
 .long FLAGS
 .long CHECKSUM
 
 # Reserve a stack for the initial thread.
-.section .bss
+.section .bootstrap_stack, "aw", @nobits
 .align 16
 stack_bottom:
 .skip 16384 # 16 KiB
 stack_top:
 
+# Preallocate pages used for paging. Don't hard-code addresses and assume they
+# are available, as the bootloader might have loaded its multiboot structures or
+# modules there. This lets the bootloader know it must avoid the addresses.
+.section .bss, "aw", @nobits
+.align 4096
+boot_page_directory:
+	.skip 4096
+boot_page_table1:
+	.skip 4096
 # The kernel entry point.
-.section .text
+.section .multiboot.text, "a"
 .global _start
 .type _start, @function
 _start:
+	# Physical address of boot_page_table1.
+	lea edi, [boot_page_table1 - 0xC0000000]
+	xor esi, esi
+	mov ecx, 1023
+
+1:
+	# Only map the kernel.
+	cmp esi, OFFSET _kernel_start
+	jl 2f
+	cmp esi, OFFSET _kernel_end - 0xC0000000
+	jge 3f
+
+	# Map physical address as "present, writable". Note that this maps
+	# .text and .rodata as writable. Mind security and map them as non-writable.
+	mov edx, esi
+	or edx, 0x003
+	mov [edi], edx
+
+2:
+	# Size of page is 4096 bytes.
+	add esi, 4096
+	# Size of entries in boot_page_table1 is 4 bytes.
+	add edi, 4
+	# Loop to the next entry if we haven't finished.
+	loop 1b
+
+3:
+	# Map VGA video memory to 0xC03FF000 as "present, writable".
+	mov DWORD PTR boot_page_table1 - 0xC0000000 + 1023 * 4, 0x000B8000 | 0x003
+
+	# The page table is used at both page directory entry 0 (virtually from 0x0
+	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
+	# 768 (virtually from 0xC0000000 to 0xC03FFFFF) (thus mapping it in the
+	# higher half). The kernel is identity mapped because enabling paging does
+	# not change the next instruction, which continues to be physical. The CPU
+	# would instead page fault if there was no identity mapping.
+
+	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
+	mov DWORD PTR boot_page_directory - 0xC0000000 + 0,       OFFSET boot_page_table1 - 0xC0000000 + 0x003
+	mov DWORD PTR boot_page_directory - 0xC0000000 + 768 * 4, OFFSET boot_page_table1 - 0xC0000000 + 0x003
+
+	# Set cr3 to the address of the boot_page_directory.
+	lea ecx, [boot_page_directory - 0xC0000000]
+	mov cr3, ecx
+
+	# Enable paging and the write-protect bit.
+	mov ecx, cr0
+	or ecx, 0x80010000
+	mov cr0, ecx
+
+	# Jump to higher half with an absolute jump.
+	lea ecx, 4f
+	jmp ecx
+
+.section .text
+
+4:
+	# Unmap the identity mapping as it is now unnecessary.
+	mov DWORD PTR boot_page_directory + 0, 0
+
+	# Reload crc3 to force a TLB flush so the changes to take effect.
+	mov ecx, cr3
+	mov cr3, ecx
+
+	# Set up the stack.
 	lea esp, [stack_top]
 
 	# Call the global constructors.
@@ -38,4 +112,3 @@ _start:
 	cli
 1:	hlt
 	jmp 1b
-.size _start, . - _start
