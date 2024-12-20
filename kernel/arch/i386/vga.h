@@ -46,10 +46,9 @@ struct vga_entry {
         uint8_t colour;
 };
 
-inline static uint8_t vga_entry_colour(enum vga_colour fg, enum vga_colour bg,
-                                       uint8_t blink)
+inline static uint8_t vga_entry_colour(enum vga_colour fg, enum vga_colour bg)
 {
-        return (blink << 7) | (bg << 4) | fg;
+        return (bg << 4) | fg;
 }
 
 inline static struct vga_entry vga_entry(unsigned char uc, uint8_t colour)

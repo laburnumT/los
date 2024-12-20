@@ -30,7 +30,7 @@ void tty_initialize(void)
         terminal_row    = 0;
         terminal_column = 0;
         terminal_colour =
-            vga_entry_colour(VGA_COLOUR_LIGHT_GREY, VGA_COLOUR_BLACK, 0);
+            vga_entry_colour(VGA_COLOUR_WHITE, VGA_COLOUR_BLUE);
         terminal_buffer = VGA_MEMORY;
         tty_clear();
         tty_cursor_enable(0, 15);
