@@ -18,6 +18,14 @@ while [[ "${#}" -gt 0 ]]; do
                         shift
                         DEBUG_FLAGS="-s -S"
                         ;;
+                --iso)
+                        shift
+                        . ./iso.sh
+                        MODE="-cdrom los.iso"
+                        ;;
+                *)
+                        echo "Unknown flag" >&2
+                        exit 1
         esac
 done
 
