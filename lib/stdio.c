@@ -43,12 +43,19 @@ int putchar(int c)
         return c;
 }
 
-int puts(const char *s)
+static int put_str(const char *s)
 {
         for (; *s; ++s) {
                 if (putchar(*s) != *s)
                         return EOF;
         }
+        return 0;
+}
+
+int puts(const char *s)
+{
+        put_str(s);
+        putchar('\n');
 
         return 0;
 }
@@ -72,13 +79,13 @@ int printf(const char *restrict format, ...)
                 case 'd': {
                         char buff[10];
                         int_to_str(buff, va_arg(args, int));
-                        puts(buff);
+                        put_str(buff);
                         break;
                 case 'c':
                         putchar(va_arg(args, int));
                         break;
                 case 's':
-                        puts(va_arg(args, char *));
+                        put_str(va_arg(args, char *));
                         break;
                 default:
                         putchar('%');
