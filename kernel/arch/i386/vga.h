@@ -11,7 +11,7 @@ static volatile struct vga_entry *const VGA_MEMORY =
 static const uint16_t VGA_ADDRESS_REGISTER = 0x3D4;
 static const uint16_t VGA_DATA_REGISTER    = 0x3D5;
 
-enum vga_register_index : uint8_t {
+enum : uint8_t {
         VGA_HORIZONTAL_TOTAL_REGISTER          = 0x00,
         VGA_END_HORIZONTAL_DISPLAY_REGISTER    = 0x01,
         VGA_START_HORIZONTAL_BLANKING_REGISTER = 0x02,

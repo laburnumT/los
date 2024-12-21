@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-enum gdt_access_byte : uint8_t {
+enum : uint8_t {
         GDT_PRESENT                 = 0x1 << 7,
         GDT_DESCRIPTOR_PRIV_LEVEL_3 = (0x1 << 6) + (0x1 << 5),
         GDT_DESCRIPTOR_PRIV_LEVEL_2 = 0x1 << 6,
@@ -16,7 +16,7 @@ enum gdt_access_byte : uint8_t {
         GDT_ACCESSED                = 0x1 << 0,
 };
 
-enum gdt_access_byte_defaults : uint8_t {
+enum : uint8_t {
         GDT_CODE_PL0 = GDT_PRESENT | GDT_DESCRIPTOR_PRIV_LEVEL_0 |
                        GDT_CODE_DATA | GDT_EXECUTABLE | GDT_READ_WRITE,
         GDT_DATA_PL0 = GDT_PRESENT | GDT_DESCRIPTOR_PRIV_LEVEL_0 |
