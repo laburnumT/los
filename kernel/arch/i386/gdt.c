@@ -2,10 +2,8 @@
 
 #include <stdint.h>
 
-
-void gdt_encode_gdt_segment_descriptor(struct gdt_segment_descriptor *d,
-                                       uint32_t limit, uint32_t base,
-                                       uint8_t access_byte, uint8_t flags)
+void gdt_encode(struct gdt_segment_descriptor *d, uint32_t limit, uint32_t base,
+                uint8_t access_byte, uint8_t flags)
 {
         // TODO(laburnumT): enforce limit < 0xFFFFF
         d->limit       = limit & 0xFFFF;

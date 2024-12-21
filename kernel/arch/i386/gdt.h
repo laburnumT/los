@@ -36,12 +36,11 @@ struct gdt_segment_descriptor {
         uint8_t base3;
 } __attribute__((__packed__));
 
-void gdt_encode_gdt_segment_descriptor(struct gdt_segment_descriptor *d,
+void gdt_encode(struct gdt_segment_descriptor *d,
                                        uint32_t limit, uint32_t base,
                                        uint8_t access_byte, uint8_t flags);
 // Set in gdt_asm.s
 void gdt_set(uint16_t size, uintptr_t offset);
-
 void gdt_reload_segments(void);
 
 #endif
