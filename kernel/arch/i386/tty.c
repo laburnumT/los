@@ -25,7 +25,7 @@ static void tty_clear(void)
         }
 }
 
-void tty_initialize(void)
+void tty_initialise(void)
 {
         terminal_row    = 0;
         terminal_column = 0;
