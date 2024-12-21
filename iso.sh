@@ -6,10 +6,10 @@ mkdir -p isodir
 mkdir -p isodir/boot
 mkdir -p isodir/boot/grub
 
-cp sysroot/boot/myos.kernel isodir/boot/myos.kernel
+cp sysroot/boot/los.kernel isodir/boot/los.kernel
 cat > isodir/boot/grub/grub.cfg << EOF
-menuentry "myos" {
-	multiboot /boot/myos.kernel
+menuentry "los" {
+	multiboot /boot/los.kernel
 }
 EOF
-grub-mkrescue -o myos.iso isodir
+grub-mkrescue -o los.iso isodir

@@ -3,11 +3,12 @@
 set -euo pipefail
 
 DEBUG_FLAGS=""
+MODE="-kernel kernel/los.kernel"
 
 main() {
         . ./build.sh
         "qemu-system-$(./target-triplet-to-arch.sh ${HOST})" \
-                -kernel kernel/myos.kernel \
+                ${MODE} \
                 ${DEBUG_FLAGS}
 }
 
