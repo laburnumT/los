@@ -12,5 +12,6 @@ struct interrupt_stack_frame {
 } __attribute__((__packed__));
 
 void interrupt_exception_handler(struct interrupt_stack_frame *frame);
+void isr_init(void);
 
 #endif

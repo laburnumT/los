@@ -59,6 +59,9 @@ los.kernel: $(OBJS) $(ARCHDIR)/linker.ld $(SYSROOT)/usr/lib/libk.a
 $(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
 	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
 
+$(ARCHDIR)/interrupt_asm_auto.s: $(ARCHDIR)/scripts/gen_interrupt_asm.py
+	$< > $@
+
 .c.o:
 	$(CC) -MD -c $< -o $@ -std=gnu23 $(CFLAGS) $(CPPFLAGS)
 
@@ -69,6 +72,7 @@ clean:
 	rm -f los.kernel
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
+	rm -f $(KERNEL_ARCH_EPHEM)
 
 install: install-headers install-kernel
 
