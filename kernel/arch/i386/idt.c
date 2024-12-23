@@ -52,6 +52,11 @@ void idt_init(void)
                            0,
                            1);
         }
+
+        // Disable all interrupts
+        for (uint16_t i = 0; i < (uint16_t)(256 - PIC_OFFSET); ++i)
+                pic_set_mask(i);
+
         idt_set(sizeof(idt) - 1, (uintptr_t)idt);
 
         pic_remap(PIC_OFFSET, PIC_OFFSET + 8);

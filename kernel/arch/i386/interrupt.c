@@ -1,5 +1,6 @@
 #include "interrupt.h"
 
+#include <stdint.h>
 #include <stdio.h>
 
 #include "idt.h"
@@ -28,7 +29,15 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
         __asm__("hlt");
 }
 
+static void set_handler(uint8_t n,
+                        void (*handler)(struct interrupt_stack_frame *frame))
+{
+        isr_handlers[n] = handler;
+        if (n >= PIC_OFFSET)
+                pic_clear_mask(n - PIC_OFFSET);
+}
+
 void isr_init(void)
 {
-        isr_handlers[PIC_OFFSET + 0] = interrupt_irq_0;
+        set_handler(PIC_OFFSET, interrupt_irq_0);
 }
