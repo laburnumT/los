@@ -18,12 +18,16 @@ while [[ "${#}" -gt 0 ]]; do
         case "${1}" in
                 -d | --debug)
                         shift
-                        DEBUG_FLAGS="-s -S"
+                        DEBUG_FLAGS="${DEBUG_FLAGS} -s -S"
                         ;;
                 --iso)
                         shift
                         . ./iso.sh
                         MODE="-cdrom los.iso"
+                        ;;
+                --int)
+                        shift
+                        DEBUG_FLAGS="${DEBUG_FLAGS} -d int"
                         ;;
                 -m)
                         shift
