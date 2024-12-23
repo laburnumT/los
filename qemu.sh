@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+EXTRA_FLAGS=""
 DEBUG_FLAGS=""
 MODE="-kernel kernel/los.kernel"
 
@@ -9,6 +10,7 @@ main() {
         . ./build.sh
         "qemu-system-$(./target-triplet-to-arch.sh ${HOST})" \
                 ${MODE} \
+                ${EXTRA_FLAGS} \
                 ${DEBUG_FLAGS}
 }
 
@@ -22,6 +24,11 @@ while [[ "${#}" -gt 0 ]]; do
                         shift
                         . ./iso.sh
                         MODE="-cdrom los.iso"
+                        ;;
+                -m)
+                        shift
+                        EXTRA_FLAGS="${EXTRA_FLAGS} -m ${1}"
+                        shift
                         ;;
                 *)
                         echo "Unknown flag" >&2
