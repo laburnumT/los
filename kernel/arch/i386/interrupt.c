@@ -2,9 +2,16 @@
 
 #include <stdio.h>
 
-#include <kernel/interrupt.h>
+#include "idt.h"
+#include "pic.h"
 
 static void (*isr_handlers[256])(struct interrupt_stack_frame *frame) = {};
+
+static void interrupt_irq_0(struct interrupt_stack_frame *frame)
+{
+        (void)frame;
+        pic_send_eoi(0);
+}
 
 void interrupt_exception_handler(struct interrupt_stack_frame *frame)
 {
@@ -23,4 +30,5 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
 
 void isr_init(void)
 {
+        isr_handlers[PIC_OFFSET + 0] = interrupt_irq_0;
 }
