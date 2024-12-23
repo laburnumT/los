@@ -59,7 +59,7 @@ static uint16_t pic_mask_prework(uint8_t *irq)
 void pic_set_mask(uint8_t irq)
 {
         uint16_t port = pic_mask_prework(&irq);
-        outb(port, inb(port) & (1 << irq));
+        outb(port, inb(port) | (1 << irq));
 }
 
 void pic_clear_mask(uint8_t irq)
