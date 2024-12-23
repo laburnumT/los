@@ -4,12 +4,12 @@
 
 void outb(uint16_t port, uint8_t data)
 {
-        __asm__("out dx, al\n" : : "d"(port), "a"(data));
+        __asm__("out dx, al\n" : : "Nd"(port), "a"(data) : "memory");
 }
 
 uint8_t inb(uint16_t port)
 {
         uint8_t data;
-        __asm__("in al, dx\n" : "=a"(data) : "d"(port));
+        __asm__("in al, dx\n" : "=a"(data) : "Nd"(port) : "memory");
         return data;
 }
