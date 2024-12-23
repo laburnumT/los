@@ -22,11 +22,6 @@ ARCHDIR=arch/$(HOSTARCH)
 
 include $(ARCHDIR)/make.config
 
-CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
-CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
-LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
-LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
-
 KERNEL_OBJS = \
 	$(KERNEL_ARCH_OBJS) \
 	kernel/kernel.o \
@@ -47,6 +42,9 @@ LINK_LIST = \
 	$(ARCHDIR)/crtend.o \
 	$(ARCHDIR)/crtn.o \
 
+EPHEM = \
+	$(KERNEL_ARCH_EPHEM)
+
 .PHONY: all clean install install-headers install-kernel
 .SUFFIXES: .o .c .s
 
@@ -56,13 +54,7 @@ los.kernel: $(OBJS) $(ARCHDIR)/linker.ld $(SYSROOT)/usr/lib/libk.a
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(LINK_LIST)
 	grub-file --is-x86-multiboot los.kernel
 
-$(ARCHDIR)/crtbegin.o $(ARCHDIR)/crtend.o:
-	OBJ=`$(CC) $(CFLAGS) $(LDFLAGS) -print-file-name=$(@F)` && cp "$$OBJ" $@
-
-$(ARCHDIR)/interrupt_asm_auto.s: $(ARCHDIR)/scripts/gen_interrupt_asm.py
-	$< > $@
-
-.c.o:
+%.o: %.c
 	$(CC) -MD -c $< -o $@ -std=gnu23 $(CFLAGS) $(CPPFLAGS)
 
 .s.o:
@@ -72,7 +64,7 @@ clean:
 	rm -f los.kernel
 	rm -f $(OBJS) *.o */*.o */*/*.o
 	rm -f $(OBJS:.o=.d) *.d */*.d */*/*.d
-	rm -f $(KERNEL_ARCH_EPHEM)
+	rm -f $(EPHEM)
 
 install: install-headers install-kernel
 
