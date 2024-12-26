@@ -39,7 +39,7 @@ static void idt_set(uint16_t size, uintptr_t offset)
 {
         idtr.size   = size;
         idtr.offset = offset;
-        __asm__("lidt [%0]\n" ::"m"(idtr));
+        __asm__ volatile("lidt [%0]\n" ::"m"(idtr));
 }
 
 void idt_init(void)
