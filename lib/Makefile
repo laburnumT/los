@@ -31,6 +31,7 @@ FREEOBJS = \
 	$(ARCH_FREEOBJS) \
 	ctype.o \
 	stdio.o \
+	stdlib.o \
 	string.o \
 
 HOSTEDOBJS = \
