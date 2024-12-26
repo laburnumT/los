@@ -29,8 +29,8 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
         __asm__("hlt");
 }
 
-static void set_handler(uint8_t n,
-                        void (*handler)(struct interrupt_stack_frame *frame))
+void interrupt_set_handler(uint8_t n,
+                           void (*handler)(struct interrupt_stack_frame *frame))
 {
         isr_handlers[n] = handler;
         if (n >= PIC_OFFSET)
@@ -39,5 +39,5 @@ static void set_handler(uint8_t n,
 
 void isr_init(void)
 {
-        set_handler(PIC_OFFSET, interrupt_irq_0);
+        interrupt_set_handler(PIC_OFFSET + 0, interrupt_irq_0);
 }
