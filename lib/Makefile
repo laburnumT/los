@@ -29,6 +29,7 @@ LIBK_CPPFLAGS:=$(LIBK_CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
 
 FREEOBJS = \
 	$(ARCH_FREEOBJS) \
+	ctype.o \
 	stdio.o \
 	string.o \
 
