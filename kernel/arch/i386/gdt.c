@@ -35,7 +35,7 @@ static void gdt_set(uint16_t size, uintptr_t offset)
 {
         gdtr.size   = size;
         gdtr.offset = offset;
-        __asm__("lgdt %0\n" ::"m"(gdtr));
+        __asm__("lgdt [%0]\n" ::"m"(gdtr));
 }
 
 void gdt_init(void)
