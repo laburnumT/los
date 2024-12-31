@@ -6,5 +6,6 @@
 int putchar(int c);
 int puts(const char *s);
 int printf(const char *restrict format, ...);
+int getchar(void);
 
 #endif

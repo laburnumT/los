@@ -8,6 +8,7 @@
 #include <string.h>
 
 #ifdef __is_libk
+        #include <kernel/keyboard.h>
         #include <kernel/tty.h>
 #endif
 
@@ -371,6 +372,15 @@ int putchar(int c)
         #error NOT IMPLEMENTED
 #endif
         return c;
+}
+
+int getchar(void)
+{
+#ifdef __is_libk
+        return keyboard_getchar();
+#else
+        #error NOT IMPLEMENTED
+#endif
 }
 
 static int put_str(const char *s)
