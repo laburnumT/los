@@ -113,6 +113,15 @@ void tty_putchar(char c)
         case '\t':
                 terminal_column += 4;
                 break;
+        case '\b':
+                if (terminal_column) {
+                        --terminal_column;
+                        tty_putentryat(' ',
+                                       terminal_colour,
+                                       terminal_column,
+                                       terminal_row);
+                }
+                break;
         default:
                 tty_putentryat((unsigned char)c,
                                terminal_colour,
