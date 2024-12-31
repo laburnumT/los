@@ -128,7 +128,7 @@ static uint8_t test_port(uint8_t port)
 
 void ps2_send_byte(uint8_t byte, uint8_t port)
 {
-        if (port > 2 || !ports_enabled[port - 1]) {
+        if (port > 2 || port < 1 || !ports_enabled[port - 1]) {
                 printf("PS/2 port %u is not available\n", port);
                 return;
         }
