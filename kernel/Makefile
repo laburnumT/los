@@ -24,7 +24,9 @@ include $(ARCHDIR)/make.config
 
 KERNEL_OBJS = \
 	$(KERNEL_ARCH_OBJS) \
+	kernel/keyboard.o \
 	kernel/kernel.o \
+	kernel/ps2_keyboard.o \
 
 OBJS = \
 	$(ARCHDIR)/crti.o \
