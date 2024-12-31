@@ -17,7 +17,8 @@ static char shift_promotion[] = {
 
 static uint8_t is_printable(enum keyboard_code c)
 {
-        return c >= KEYBOARD_A_PRESS && c < KEYBOARD_PRINTABLE_BARRIER;
+        return (c >= KEYBOARD_A_PRESS && c < KEYBOARD_SHIFT_L_PRESS) ||
+               (c >= KEYBOARD_A_RELEASE && c < KEYBOARD_SHIFT_L_RELEASE);
 }
 
 enum keyboard_code keyboard_receive_key(void)

@@ -53,10 +53,11 @@ enum keyboard_code {
         KEYBOARD_TAB_PRESS,
         KEYBOARD_ENTER_PRESS,
         KEYBOARD_BKSP_PRESS,
-        KEYBOARD_PRINTABLE_BARRIER,
+        // Print barrier
         KEYBOARD_SHIFT_L_PRESS,
         KEYBOARD_SHIFT_R_PRESS,
         KEYBOARD_CAPS_PRESS,
+        // Release
         KEYBOARD_A_RELEASE,
         KEYBOARD_B_RELEASE,
         KEYBOARD_C_RELEASE,
@@ -108,6 +109,7 @@ enum keyboard_code {
         KEYBOARD_TAB_RELEASE,
         KEYBOARD_ENTER_RELEASE,
         KEYBOARD_BKSP_RELEASE,
+        // Print barrier
         KEYBOARD_SHIFT_L_RELEASE,
         KEYBOARD_SHIFT_R_RELEASE,
         KEYBOARD_CAPS_RELEASE,
