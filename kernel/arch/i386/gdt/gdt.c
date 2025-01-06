@@ -1,6 +1,10 @@
 #include "gdt.h"
 
+#include <stddef.h>
 #include <stdint.h>
+
+#include "boot.h"
+#include "tss.h"
 
 enum : uint8_t {
         GDT_PRESENT                 = 0x1 << 7,
@@ -24,6 +28,7 @@ enum : uint8_t {
                        GDT_CODE_DATA | GDT_EXECUTABLE | GDT_READ_WRITE,
         GDT_DATA_PL3 = GDT_PRESENT | GDT_DESCRIPTOR_PRIV_LEVEL_3 |
                        GDT_CODE_DATA | GDT_READ_WRITE,
+        GDT_TSS = GDT_PRESENT | GDT_EXECUTABLE | GDT_ACCESSED,
 };
 
 struct gdt_segment_descriptor {
@@ -41,6 +46,7 @@ static struct {
         struct gdt_segment_descriptor kernel_mode_data;
         struct gdt_segment_descriptor user_mode_code;
         struct gdt_segment_descriptor user_mode_data;
+        struct gdt_segment_descriptor tss;
 } __attribute__((__packed__)) gdt;
 
 static struct {
@@ -78,7 +84,15 @@ void gdt_init(void)
         gdt_encode(&gdt.kernel_mode_data, 0xFFFFF, 0, GDT_DATA_PL0, 0xC);
         gdt_encode(&gdt.user_mode_code, 0xFFFFF, 0, GDT_CODE_PL3, 0xC);
         gdt_encode(&gdt.user_mode_data, 0xFFFFF, 0, GDT_DATA_PL3, 0xC);
+        gdt_encode(&gdt.tss, sizeof(tss) - 1, (uintptr_t)&tss, GDT_TSS, 0x40);
 
         gdt_set(sizeof(gdt) - 1, (uintptr_t)&gdt);
         gdt_reload_segments();
+
+        tss      = (struct tss_entry){};
+        tss.ss0  = offsetof(typeof(gdt), kernel_mode_data);
+        tss.esp0 = (uintptr_t)&stack_top;
+        __asm__ volatile("mov ax, dx\n"
+                         "ltr ax\n" ::"d"(offsetof(typeof(gdt), tss))
+                         : "memory");
 }

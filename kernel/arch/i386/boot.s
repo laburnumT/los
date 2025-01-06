@@ -15,6 +15,7 @@
 .long CHECKSUM
 
 # Reserve a stack for the initial thread.
+.globl stack_top, stack_bottom
 .section .bootstrap_stack, "aw", @nobits
 .align 16
 stack_bottom:

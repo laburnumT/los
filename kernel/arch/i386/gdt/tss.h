@@ -1,0 +1,41 @@
+#ifndef LOS_KERNEL_ARCH_I386_TSS_H
+#define LOS_KERNEL_ARCH_I386_TSS_H
+
+#include <stdint.h>
+
+struct tss_entry {
+        struct tss_entry *prev;
+        uintptr_t esp0;
+        uintptr_t ss0;
+        uintptr_t esp1;
+        uintptr_t ss1;
+        uintptr_t esp2;
+        uintptr_t ss2;
+        uint32_t cr3;
+        uint32_t eip;
+        uint32_t eflags;
+        uint32_t eax;
+        uint32_t ecx;
+        uint32_t edx;
+        uint32_t ebx;
+        uint32_t esp;
+        uint32_t ebp;
+        uint32_t esi;
+        uint32_t edi;
+        uint32_t es;
+        uint32_t cs;
+        uint32_t ss;
+        uint32_t ds;
+        uint32_t fs;
+        uint32_t gs;
+        uint32_t ldtr;
+        uint16_t trap;
+        uint16_t iomap_base;
+} __attribute__((__packed__));
+
+struct tss_entry tss;
+
+// void jump_ring(uint8_t ring, uintptr_t code_offset, uintptr_t data_offset);
+void jump_ring(void);
+
+#endif
