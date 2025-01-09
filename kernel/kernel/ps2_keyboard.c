@@ -124,7 +124,7 @@ static const enum keyboard_code scan2_key_map[] = {
 enum keyboard_code ps2_receive_key(void)
 {
         uint8_t code = ps2_receive_byte();
-        if (code == 0xF0)
+        if (code == PS2_KEYBOARD_COMAND_SCAN_CODE)
                 return scan2_key_map[ps2_receive_byte()] + KEYBOARD_A_RELEASE;
 
         return scan2_key_map[code];
