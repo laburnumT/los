@@ -1,7 +1,9 @@
 #include "idt.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
+#include "gdt.h"
 #include "interrupt.h"
 #include "pic.h"
 #include <kernel/interrupt.h>
@@ -39,7 +41,7 @@ static void idt_set(uint16_t size, uintptr_t offset)
 {
         idtr.size   = size;
         idtr.offset = offset;
-        __asm__ volatile("lidt [%0]\n" ::"m"(idtr));
+        __asm__ volatile("lidt [%0]\n" ::"m"(idtr) : "memory");
 }
 
 void idt_init(void)
@@ -47,7 +49,7 @@ void idt_init(void)
         for (uint16_t i = 0; i < 256; ++i) {
                 idt_encode(idt + i,
                            (uintptr_t)isr_table[i],
-                           0x08,
+                           offsetof(struct gdt, kernel_mode_code),
                            IDT_INTERRUPT_32,
                            0,
                            1);

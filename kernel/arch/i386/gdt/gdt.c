@@ -31,23 +31,7 @@ enum : uint8_t {
         GDT_TSS = GDT_PRESENT | GDT_EXECUTABLE | GDT_ACCESSED,
 };
 
-struct gdt_segment_descriptor {
-        uint16_t limit;
-        uint16_t base1;
-        uint8_t base2;
-        uint8_t access_byte;
-        uint8_t limit_flags;
-        uint8_t base3;
-} __attribute__((__packed__));
-
-static struct {
-        struct gdt_segment_descriptor null;
-        struct gdt_segment_descriptor kernel_mode_code;
-        struct gdt_segment_descriptor kernel_mode_data;
-        struct gdt_segment_descriptor user_mode_code;
-        struct gdt_segment_descriptor user_mode_data;
-        struct gdt_segment_descriptor tss;
-} __attribute__((__packed__)) gdt;
+static struct gdt gdt;
 
 static struct {
         uint16_t size;
@@ -74,7 +58,7 @@ static void gdt_set(uint16_t size, uintptr_t offset)
 {
         gdtr.size   = size;
         gdtr.offset = offset;
-        __asm__ volatile("lgdt [%0]\n" ::"m"(gdtr));
+        __asm__ volatile("lgdt [%0]\n" ::"m"(gdtr) : "memory");
 }
 
 void gdt_init(void)
@@ -89,10 +73,9 @@ void gdt_init(void)
         gdt_set(sizeof(gdt) - 1, (uintptr_t)&gdt);
         gdt_reload_segments();
 
-        tss      = (struct tss_entry){};
+        tss      = (typeof(tss)){};
         tss.ss0  = offsetof(typeof(gdt), kernel_mode_data);
         tss.esp0 = (uintptr_t)&stack_top;
-        __asm__ volatile("mov ax, dx\n"
-                         "ltr ax\n" ::"d"(offsetof(typeof(gdt), tss))
+        __asm__ volatile("ltr %0\n" ::"r"(offsetof(typeof(gdt), tss))
                          : "memory");
 }
