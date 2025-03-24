@@ -273,8 +273,11 @@ static void rev_string(char *restrict buff, size_t len)
                 uint8_t is_neg = fmt->conversion == CONV_SDEC && val < 0;      \
                 if (is_neg)                                                    \
                         val = -val;                                            \
-                for (cnt = 0; val > 0; val /= mod)                             \
+                for (cnt = 0; val > 0; val /= mod) {                           \
                         buff[cnt++] = set_table[val % mod];                    \
+                        if (fmt->conversion == CONV_UHEX_UP)                   \
+                                buff[cnt - 1] = toupper(buff[cnt - 1]);        \
+                }                                                              \
                 if (is_neg)                                                    \
                         buff[cnt++] = '-';                                     \
                 buff[cnt] = '\0';                                              \
