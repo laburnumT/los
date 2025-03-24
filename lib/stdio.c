@@ -136,6 +136,8 @@ static void parse_format(const char *restrict *restrict format,
                 case 64:
                         fmt_type->length = sizeof(int64_t);
                         break;
+                default:
+                        __builtin_unreachable();
                 }
                 break;
         }
