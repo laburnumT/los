@@ -2,8 +2,10 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 
 #include "boot.h"
+#include "kernel/panic.h"
 #include "tss.h"
 
 enum : uint8_t {
@@ -41,7 +43,11 @@ static struct {
 static void gdt_encode(struct gdt_segment_descriptor *d, uint32_t limit,
                        uint32_t base, uint8_t access_byte, uint8_t flags)
 {
-        // TODO(laburnumT): enforce limit < 0xFFFFF
+        if (limit > 0xFFFFF) {
+                printf("Limit of 0x%X is larger than 0xFFFFF\n", limit);
+                panic();
+        }
+
         d->limit       = limit & 0xFFFF;
         d->limit_flags = (limit >> 16) & 0x0F;
 
