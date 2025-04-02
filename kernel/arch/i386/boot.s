@@ -7,6 +7,8 @@
 .set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
 .set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
 
+.set VIRT_ADDRESS_BASE, 0xC0000000
+
 # Declare a header as in the Multiboot Standard.
 .section .multiboot.data, "aw"
 .align 4
@@ -37,7 +39,7 @@ boot_page_table1:
 .type _start, @function
 _start:
 	# Physical address of boot_page_table1.
-	lea edi, [boot_page_table1 - 0xC0000000]
+	lea edi, [boot_page_table1 - VIRT_ADDRESS_BASE]
 	xor esi, esi
 	mov ecx, 1023
 
@@ -45,7 +47,7 @@ _start:
 	# Only map the kernel.
 	cmp esi, OFFSET _kernel_start
 	jl 2f
-	cmp esi, OFFSET _kernel_end - 0xC0000000
+	cmp esi, OFFSET _kernel_end - VIRT_ADDRESS_BASE
 	jge 3f
 
 	# Map physical address as "present, writable". Note that this maps
@@ -64,7 +66,7 @@ _start:
 
 3:
 	# Map VGA video memory to 0xC03FF000 as "present, writable".
-	mov DWORD PTR boot_page_table1 - 0xC0000000 + 1023 * 4, 0x000B8000 | 0x003
+	mov DWORD PTR boot_page_table1 - VIRT_ADDRESS_BASE + 1023 * 4, 0x000B8000 | 0x003
 
 	# The page table is used at both page directory entry 0 (virtually from 0x0
 	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
@@ -74,11 +76,11 @@ _start:
 	# would instead page fault if there was no identity mapping.
 
 	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
-	mov DWORD PTR boot_page_directory - 0xC0000000 + 0,       OFFSET boot_page_table1 - 0xC0000000 + 0x003
-	mov DWORD PTR boot_page_directory - 0xC0000000 + 768 * 4, OFFSET boot_page_table1 - 0xC0000000 + 0x003
+	mov DWORD PTR boot_page_directory - VIRT_ADDRESS_BASE + 0,       OFFSET boot_page_table1 - VIRT_ADDRESS_BASE + 0x003
+	mov DWORD PTR boot_page_directory - VIRT_ADDRESS_BASE + 768 * 4, OFFSET boot_page_table1 - VIRT_ADDRESS_BASE + 0x003
 
 	# Set cr3 to the address of the boot_page_directory.
-	lea ecx, [boot_page_directory - 0xC0000000]
+	lea ecx, [boot_page_directory - VIRT_ADDRESS_BASE]
 	mov cr3, ecx
 
 	# Enable paging and the write-protect bit.
