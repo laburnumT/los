@@ -347,7 +347,7 @@ static int num_fmt_to_str(char *restrict buff,
 }
 
 static int fmt_to_str(char *restrict buff, const struct stdio_format_type *fmt,
-                      va_list *va) // NOLINT
+                      va_list *va)
 {
         size_t cnt = 0;
 
@@ -405,12 +405,9 @@ int puts(const char *s)
         return 0;
 }
 
-int printf(const char *restrict format, ...)
+int vprintf(const char *restrict format, va_list arg)
 {
-        va_list args;
-        va_start(args, format);
         size_t cnt = 0;
-
         for (cnt = 0; *format; ++format) {
                 if (*format != '%') {
                         ++cnt;
@@ -427,11 +424,21 @@ int printf(const char *restrict format, ...)
                         continue;
                 }
                 char buff[100];
-                fmt_to_str(buff, &fmt_type, &args);
+                fmt_to_str(buff, &fmt_type, &arg);
                 put_str(buff);
         }
 
-        va_end(args);
-
         return (int)cnt;
+}
+
+int printf(const char *restrict format, ...)
+{
+        va_list arg;
+        va_start(arg, format);
+
+        int cnt = vprintf(format, arg);
+
+        va_end(arg);
+
+        return cnt;
 }
