@@ -1,0 +1,43 @@
+include_directories(include)
+
+execute_process(
+  COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtbegin.o
+  OUTPUT_VARIABLE CRTBEGIN_O
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+  COMMAND ${CMAKE_C_COMPILER} -print-file-name=crtend.o
+  OUTPUT_VARIABLE CRTEND_O
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/scripts/gen_interrupt_asm.py
+  OUTPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/interrupt_asm_auto.s
+)
+
+add_subdirectory(gdt)
+add_subdirectory(interrupt)
+
+add_library(
+  i386
+  boot.s
+  init.c
+  panic.c
+  port.c
+  ps2.c
+  tty.c
+)
+
+target_link_libraries(
+  i386
+  PUBLIC
+  libc_headers
+  gdt
+  interrupt
+  ${CMAKE_CURRENT_SOURCE_DIR}/crti.s
+  ${CRTBEGIN_O}
+  ${CRTEND_O}
+  ${CMAKE_CURRENT_SOURCE_DIR}/crtn.s
+)
