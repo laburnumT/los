@@ -7,8 +7,7 @@ DEBUG_FLAGS=""
 MODE="-kernel kernel/los.kernel"
 
 main() {
-        . ./build.sh
-        "qemu-system-$(./target-triplet-to-arch.sh ${HOST})" \
+        "qemu-system-i386" \
                 ${MODE} \
                 ${EXTRA_FLAGS} \
                 ${DEBUG_FLAGS}
@@ -22,7 +21,7 @@ while [[ "${#}" -gt 0 ]]; do
                         ;;
                 --iso)
                         shift
-                        . ./iso.sh
+                        scripts/iso.sh
                         MODE="-cdrom los.iso"
                         ;;
                 --int)
@@ -37,6 +36,7 @@ while [[ "${#}" -gt 0 ]]; do
                 *)
                         echo "Unknown flag" >&2
                         exit 1
+                        ;;
         esac
 done
 

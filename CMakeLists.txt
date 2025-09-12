@@ -46,3 +46,11 @@ target_link_libraries(
   PUBLIC
   kernel_headers
 )
+
+add_custom_target(
+  copy_scripts
+  ALL
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+  ${CMAKE_CURRENT_BINARY_DIR}/scripts
+)
