@@ -7,7 +7,7 @@
 .set MAGIC,    0x1BADB002       # 'magic number' lets bootloader find the header
 .set CHECKSUM, -(MAGIC + FLAGS) # checksum of above, to prove we are multiboot
 
-.set VIRT_ADDRESS_BASE, 0xC0000000
+.set VIRT_ADDRESS_BASE_BOOT, 0xC0000000
 
 # Declare a header as in the Multiboot Standard.
 .section .multiboot.data, "aw"
@@ -29,17 +29,17 @@ stack_top:
 # modules there. This lets the bootloader know it must avoid the addresses.
 .section .bss, "aw", @nobits
 .align 4096
-boot_page_directory:
+page_directory:
 	.skip 4096
-boot_page_table1:
+page_table1:
 	.skip 4096
 # The kernel entry point.
 .section .multiboot.text, "a"
 .global _start
 .type _start, @function
 _start:
-	# Physical address of boot_page_table1.
-	lea edi, [boot_page_table1 - VIRT_ADDRESS_BASE]
+	# Physical address of page_table1.
+	lea edi, [page_table1 - VIRT_ADDRESS_BASE_BOOT]
 	xor esi, esi
 	mov ecx, 1023
 
@@ -47,7 +47,7 @@ _start:
 	# Only map the kernel.
 	cmp esi, OFFSET _kernel_start
 	jl 2f
-	cmp esi, OFFSET _kernel_end - VIRT_ADDRESS_BASE
+	cmp esi, OFFSET _kernel_end - VIRT_ADDRESS_BASE_BOOT
 	jge 3f
 
 	# Map physical address as "present, writable". Note that this maps
@@ -59,14 +59,14 @@ _start:
 2:
 	# Size of page is 4096 bytes.
 	add esi, 4096
-	# Size of entries in boot_page_table1 is 4 bytes.
+	# Size of entries in page_table1 is 4 bytes.
 	add edi, 4
 	# Loop to the next entry if we haven't finished.
 	loop 1b
 
 3:
 	# Map VGA video memory to 0xC03FF000 as "present, writable".
-	mov DWORD PTR boot_page_table1 - VIRT_ADDRESS_BASE + 1023 * 4, 0x000B8000 | 0x003
+	mov DWORD PTR page_table1 - VIRT_ADDRESS_BASE_BOOT + 1023 * 4, 0x000B8000 | 0x003
 
 	# The page table is used at both page directory entry 0 (virtually from 0x0
 	# to 0x3FFFFF) (thus identity mapping the kernel) and page directory entry
@@ -76,11 +76,11 @@ _start:
 	# would instead page fault if there was no identity mapping.
 
 	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
-	mov DWORD PTR boot_page_directory - VIRT_ADDRESS_BASE + 0,       OFFSET boot_page_table1 - VIRT_ADDRESS_BASE + 0x003
-	mov DWORD PTR boot_page_directory - VIRT_ADDRESS_BASE + 768 * 4, OFFSET boot_page_table1 - VIRT_ADDRESS_BASE + 0x003
+	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 0,       OFFSET page_table1 - VIRT_ADDRESS_BASE_BOOT + 0x003
+	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 768 * 4, OFFSET page_table1 - VIRT_ADDRESS_BASE_BOOT + 0x003
 
-	# Set cr3 to the address of the boot_page_directory.
-	lea ecx, [boot_page_directory - VIRT_ADDRESS_BASE]
+	# Set cr3 to the address of the page_directory.
+	lea ecx, [page_directory - VIRT_ADDRESS_BASE_BOOT]
 	mov cr3, ecx
 
 	# Enable paging and the write-protect bit.
@@ -96,7 +96,7 @@ _start:
 
 4:
 	# Unmap the identity mapping as it is now unnecessary.
-	mov DWORD PTR boot_page_directory + 0, 0
+	mov DWORD PTR page_directory + 0, 0
 
 	# Reload crc3 to force a TLB flush so the changes to take effect.
 	mov ecx, cr3
