@@ -137,7 +137,7 @@ static void parse_format(const char *restrict *restrict format,
                         fmt_type->length = sizeof(int64_t);
                         break;
                 default:
-                        __builtin_unreachable();
+                        unreachable();
                 }
                 break;
         }
@@ -261,7 +261,7 @@ static void rev_string(char *restrict buff, size_t len)
                         mod = 2;                                               \
                         break;                                                 \
                 default:                                                       \
-                        __builtin_unreachable();                               \
+                        unreachable();                               \
                 }                                                              \
                 size_t cnt = 0;                                                \
                                                                                \
@@ -363,7 +363,7 @@ static int fmt_to_str(char *restrict buff, const struct stdio_format_type *fmt,
                 strcpy(buff, va_arg(*va, char *));
                 return (int)strlen(buff);
         default:
-                __builtin_unreachable();
+                unreachable();
         }
 
         return (int)cnt;
