@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include "idt.h"
+#include "mm.h"
 #include "pic.h"
 #include <kernel/panic.h>
 
@@ -34,6 +35,30 @@ static void interrupt_cpu_13(struct interrupt_stack_frame *frame)
         }
         printf("Index in %s\n", str);
         printf("Index: %p\n", (void *)(error_code & 0xFFF8));
+        panic();
+}
+
+static void interrupt_cpu_14(struct interrupt_stack_frame *frame)
+{
+        uint32_t error_code = frame->error_code;
+        uint32_t error_address;
+        __asm__("mov %0, cr2\n" : "=r"(error_address)::);
+
+        printf("Page fault error: %u\n", error_code);
+        printf("Page present  : %u\n", error_code & 0x1);
+        printf("Access type   : %c\n", error_code & (0x1 << 1) ? 'W' : 'R');
+        printf("User level 3  : %u\n", !!(error_code & (0x1 << 2)));
+        printf("Reserved write: %u\n", !!(error_code & (0x1 << 3)));
+        printf("Instr fetch   : %u\n", !!(error_code & (0x1 << 4)));
+        printf("Prot key viol : %u\n", !!(error_code & (0x1 << 5)));
+        printf("Shadow stack  : %u\n", !!(error_code & (0x1 << 6)));
+        printf("SGX violation : %u\n", !!(error_code & (0x1 << 15)));
+        printf("Error address : 0x%p\n", error_address);
+
+        if (error_code & 0x1) {
+                mm_get_page_info((void *)error_address);
+        }
+
         panic();
 }
 
@@ -69,5 +94,6 @@ void interrupt_set_handler(uint8_t n,
 void isr_init(void)
 {
         interrupt_set_handler(13, interrupt_cpu_13);
+        interrupt_set_handler(14, interrupt_cpu_14);
         interrupt_set_handler(PIC_OFFSET + 0, interrupt_irq_0);
 }
