@@ -108,6 +108,10 @@ _start:
 	# Set up the stack.
 	lea esp, [stack_top]
 
+	# Setup boot_info
+	push eax
+	push ebx
+
 	# Call the global constructors.
 	call _init
 
