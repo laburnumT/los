@@ -22,6 +22,12 @@ enum : uint8_t {
 };
 
 enum : uint8_t {
+        GDT_FLAG_GRANULARITY = 0x1 << 3,
+        GDT_FLAG_SIZE        = 0x1 << 2,
+        GDT_FLAG_LONG_MODE   = 0x1 << 1,
+};
+
+enum : uint8_t {
         GDT_CODE_PL0 = GDT_PRESENT | GDT_DESCRIPTOR_PRIV_LEVEL_0 |
                        GDT_CODE_DATA | GDT_EXECUTABLE | GDT_READ_WRITE,
         GDT_DATA_PL0 = GDT_PRESENT | GDT_DESCRIPTOR_PRIV_LEVEL_0 |
@@ -70,11 +76,27 @@ static void gdt_set(uint16_t size, uintptr_t offset)
 void gdt_init(void)
 {
         gdt_encode(&gdt.null, 0, 0, 0, 0);
-        gdt_encode(&gdt.kernel_mode_code, 0xFFFFF, 0, GDT_CODE_PL0, 0xC);
-        gdt_encode(&gdt.kernel_mode_data, 0xFFFFF, 0, GDT_DATA_PL0, 0xC);
-        gdt_encode(&gdt.user_mode_code, 0xFFFFF, 0, GDT_CODE_PL3, 0xC);
-        gdt_encode(&gdt.user_mode_data, 0xFFFFF, 0, GDT_DATA_PL3, 0xC);
-        gdt_encode(&gdt.tss, sizeof(tss) - 1, (uintptr_t)&tss, GDT_TSS, 0x40);
+        gdt_encode(&gdt.kernel_mode_code,
+                   0xFFFFF,
+                   0,
+                   GDT_CODE_PL0,
+                   GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE);
+        gdt_encode(&gdt.kernel_mode_data,
+                   0xFFFFF,
+                   0,
+                   GDT_DATA_PL0,
+                   GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE);
+        gdt_encode(&gdt.user_mode_code,
+                   0xFFFFF,
+                   0,
+                   GDT_CODE_PL3,
+                   GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE);
+        gdt_encode(&gdt.user_mode_data,
+                   0xFFFFF,
+                   0,
+                   GDT_DATA_PL3,
+                   GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE);
+        gdt_encode(&gdt.tss, sizeof(tss) - 1, (uintptr_t)&tss, GDT_TSS, 0);
 
         gdt_set(sizeof(gdt) - 1, (uintptr_t)&gdt);
         gdt_reload_segments();
