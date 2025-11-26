@@ -5,6 +5,7 @@
 
 #include "idt.h"
 #include "pic.h"
+#include <kernel/panic.h>
 
 static void (*isr_handlers[256])(struct interrupt_stack_frame *frame) = {};
 
@@ -26,7 +27,7 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
         else
                 printf("Unhandled interrupt: %u\n", frame->interrupt - 32);
 
-        __asm__("hlt");
+        panic();
 }
 
 void interrupt_set_handler(uint8_t n,
