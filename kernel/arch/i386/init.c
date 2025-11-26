@@ -5,12 +5,15 @@
 
 #include "gdt.h"
 #include "idt.h"
+#include "kernel/interrupt.h"
+#include "mm.h"
 #include "ps2.h"
-#include <kernel/interrupt.h>
 
 void init_arch(void)
 {
         puts("Setting up i386 arch");
+
+        mm_init();
 
         interrupt_disable();
         gdt_init();
