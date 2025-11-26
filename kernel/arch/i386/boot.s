@@ -27,6 +27,7 @@ stack_top:
 # Preallocate pages used for paging. Don't hard-code addresses and assume they
 # are available, as the bootloader might have loaded its multiboot structures or
 # modules there. This lets the bootloader know it must avoid the addresses.
+.globl page_directory, page_table1
 .section .bss, "aw", @nobits
 .align 4096
 page_directory:
@@ -115,3 +116,7 @@ _start:
 	cli
 1:	hlt
 	jmp 1b
+
+.globl VIRT_ADDRESS_BASE
+VIRT_ADDRESS_BASE:
+  .long VIRT_ADDRESS_BASE_BOOT
