@@ -35,7 +35,4 @@ struct tss_entry {
 
 struct tss_entry tss;
 
-// void jump_ring(uint8_t ring, uintptr_t code_offset, uintptr_t data_offset);
-void jump_ring(void);
-
 #endif

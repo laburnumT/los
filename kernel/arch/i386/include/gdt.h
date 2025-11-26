@@ -26,4 +26,7 @@ void gdt_init(void);
 // Set in gdt_asm.s
 void gdt_reload_segments(void);
 
+// Set in jump_ring.s
+void jump_ring(void *location);
+
 #endif
