@@ -14,7 +14,11 @@ file(
   ${CMAKE_SYSROOT}/boot
 )
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if("${CMAKE_BUILD_TYPE}" STREQUAL "OPTIMISED")
+  add_compile_options(-O2)
+else()
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+endif()
 
 project(
   los
