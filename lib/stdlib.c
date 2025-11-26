@@ -21,7 +21,7 @@ int atoi(const char *nptr)
 }
 
 // Assumes that alphabets are contiguous, which is not guaranteed by the spec.
-static int __char_to_int(char c)
+static int char_to_int(char c)
 {
         if (c >= '0' && c <= '9')
                 return c - '0';
@@ -72,8 +72,8 @@ static unsigned long long strtoull_internal(const char *restrict nptr,
                         nptr += 2;
         }
         long long ret = 0;
-        for (; __char_to_int(*nptr) <= base; ++nptr)
-                ret = ret * base + __char_to_int(*nptr);
+        for (; char_to_int(*nptr) <= base; ++nptr)
+                ret = ret * base + char_to_int(*nptr);
 
         if (endptr)
                 *endptr = (char *restrict)nptr;
