@@ -32,7 +32,7 @@ void pic_remap(uintptr_t offset1, uintptr_t offset2)
 
         // ICW3:
         const uint8_t follow_id = 2;
-        outb(PIC1_DATA, 0x1 << follow_id); //
+        outb(PIC1_DATA, 0x1 << follow_id);
         outb(PIC2_DATA, follow_id);
 
         // ICW4: 8086 mode
