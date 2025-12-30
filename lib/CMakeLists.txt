@@ -1,5 +1,3 @@
-project(lib)
-
 add_library(
   libk
   stdio.c
