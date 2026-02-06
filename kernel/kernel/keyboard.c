@@ -1,6 +1,5 @@
 #include <kernel/keyboard.h>
 
-#include <kernel/ps2.h>
 #include <stdint.h>
 
 static uint8_t shift_l_pressed = 0;
@@ -21,9 +20,10 @@ static uint8_t is_printable(enum keyboard_code c)
                (c >= KEYBOARD_A_RELEASE && c < KEYBOARD_SHIFT_L_RELEASE);
 }
 
+enum keyboard_code keyboard_controller_receive_key(void);
 enum keyboard_code keyboard_receive_key(void)
 {
-        enum keyboard_code code = ps2_receive_key();
+        enum keyboard_code code = keyboard_controller_receive_key();
         if (code == KEYBOARD_SHIFT_L_PRESS)
                 shift_l_pressed = 1;
         if (code == KEYBOARD_SHIFT_L_RELEASE)

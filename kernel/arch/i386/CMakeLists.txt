@@ -20,6 +20,7 @@ execute_process(
 add_subdirectory(gdt)
 add_subdirectory(interrupt)
 add_subdirectory(memory)
+add_subdirectory(ps2)
 
 add_library(
   i386
@@ -27,7 +28,6 @@ add_library(
   init.c
   panic.c
   port.c
-  ps2.c
   tty.c
 )
 
@@ -38,6 +38,7 @@ target_link_libraries(
   gdt
   interrupt
   memory
+  ps2
   ${CMAKE_CURRENT_SOURCE_DIR}/crti.s
   ${CRTBEGIN_O}
   ${CRTEND_O}

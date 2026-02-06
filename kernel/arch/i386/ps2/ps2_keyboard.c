@@ -1,4 +1,4 @@
-#include <kernel/ps2.h>
+#include <ps2.h>
 
 #include <kernel/keyboard.h>
 #include <stdint.h>
@@ -121,7 +121,7 @@ static const enum keyboard_code scan2_key_map[] = {
     [PS2_CAPS_PRESS]       = KEYBOARD_CAPS_PRESS,
 };
 
-enum keyboard_code ps2_receive_key(void)
+enum keyboard_code keyboard_controller_receive_key(void)
 {
         uint8_t code = ps2_receive_byte();
         if (code == PS2_KEYBOARD_COMAND_SCAN_CODE)

@@ -8,7 +8,6 @@ add_executable(
   los.kernel
   kernel/keyboard.c
   kernel/kernel.c
-  kernel/ps2_keyboard.c
 )
 
 target_link_options(
