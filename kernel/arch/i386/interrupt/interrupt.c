@@ -75,10 +75,10 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
                 return;
         }
 
-        if (frame->interrupt < 32)
+        if (frame->interrupt < PIC_OFFSET)
                 printf("Unhandled exception: %u\n", frame->interrupt);
         else
-                printf("Unhandled interrupt: %u\n", frame->interrupt - 32);
+                printf("Unhandled interrupt: %u\n", frame->interrupt - PIC_OFFSET);
 
         panic();
 }

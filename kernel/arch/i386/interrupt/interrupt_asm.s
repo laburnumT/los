@@ -25,7 +25,7 @@ interrupt_exception_handler_wrapper:
 	mov es, ax
 	mov fs, ax
 	mov gs, ax
-	
+
 	push esp
 	cld
 	call interrupt_exception_handler
@@ -39,5 +39,5 @@ interrupt_exception_handler_wrapper:
 
 	popad
 	add esp, 8
-	
+
 	iret
