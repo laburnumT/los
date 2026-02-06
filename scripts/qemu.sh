@@ -13,6 +13,16 @@ main() {
                 ${DEBUG_FLAGS}
 }
 
+help_func() {
+        cat <<EOF
+options:
+  -d, --debug   Freeze cpu at startup and open debug port on 1234
+  --iso         Make and use iso for LOS
+  --int         Log interrupts
+  -m            Set available memory
+EOF
+}
+
 while [[ "${#}" -gt 0 ]]; do
         case "${1}" in
                 -d | --debug)
@@ -32,6 +42,10 @@ while [[ "${#}" -gt 0 ]]; do
                         shift
                         EXTRA_FLAGS="${EXTRA_FLAGS} -m ${1}"
                         shift
+                        ;;
+                -h | --help)
+                        help_func
+                        exit 1
                         ;;
                 *)
                         echo "Unknown flag" >&2
