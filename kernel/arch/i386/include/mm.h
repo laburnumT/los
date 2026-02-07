@@ -4,7 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-enum __attribute__((flag_enum)) ptde_attributes : uint8_t {
+#include "_helper.h"
+
+enum FLAG_ENUM ptde_attributes : uint8_t {
         PTDE_PRESENT       = 0x1 << 0,
         PTDE_WRITE         = 0x1 << 1,
         PTDE_USER_MODE     = 0x1 << 2,
