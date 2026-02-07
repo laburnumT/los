@@ -3,10 +3,11 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <kernel/interrupt.h>
+
 #include "gdt.h"
 #include "interrupt.h"
 #include "pic.h"
-#include <kernel/interrupt.h>
 
 static struct {
         uint16_t size;

@@ -4,10 +4,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <kernel/panic.h>
+
 #include "idt.h"
 #include "mm.h"
 #include "pic.h"
-#include <kernel/panic.h>
 
 static void (*isr_handlers[256])(struct interrupt_stack_frame *frame) = {};
 
