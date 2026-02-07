@@ -1,7 +1,8 @@
-#include <ps2.h>
+#include "ps2.h"
+
+#include <stdint.h>
 
 #include <kernel/keyboard.h>
-#include <stdint.h>
 
 enum : uint8_t {
         PS2_KEYBOARD_COMAND_SCAN_CODE = 0xF0,
