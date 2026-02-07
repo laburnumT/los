@@ -1,5 +1,6 @@
 #include <ps2.h>
 
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -59,7 +60,11 @@ enum : uint8_t {
 };
 
 static uint8_t ports_enabled[2] = {};
-static uint8_t read_byte        = 0;
+static volatile struct {
+        uint8_t has_data;
+        uint8_t data;
+} read_byte[2]                         = {};
+static volatile uint8_t read_byte_test = 0;
 
 static uint8_t ps2_inb(enum ps2_port port)
 {
@@ -91,8 +96,19 @@ static uint8_t ps2_outb(enum ps2_port port, uint8_t data, uint8_t allow_read)
 static void interrupt_irq_1(struct interrupt_stack_frame *frame)
 {
         (void)frame;
-        read_byte = 1;
+        // read_byte[0].has_data = 1;
+        // read_byte[0].data     = inb(PS2_DATA_PORT);
+        read_byte_test = 1;
         pic_send_eoi(1);
+}
+
+static void interrupt_irq_12(struct interrupt_stack_frame *frame)
+{
+        (void)frame;
+        // read_byte[1].has_data = 1;
+        // read_byte[1].data     = inb(PS2_DATA_PORT);
+        read_byte_test = 1;
+        pic_send_eoi(12);
 }
 
 static uint8_t read_config(uint8_t allow_read)
@@ -139,13 +155,24 @@ void ps2_send_byte(uint8_t byte, uint8_t port)
         ps2_outb(PS2_DATA_PORT, byte, 0);
 }
 
-uint8_t ps2_receive_byte(void)
+uint8_t ps2_receive_byte(uint8_t port)
 {
-        for (; !read_byte;)
-                __asm__("hlt");
+        if (port > 2 || port < 1 || !ports_enabled[port - 1]) {
+                printf("PS/2 port %u is not available\n", port);
+                return 0;
+        }
 
-        read_byte = 0;
-        return ps2_inb(PS2_DATA_PORT);
+        for (; !read_byte_test;)
+                __asm__("hlt");
+        // for (; !read_byte[port - 1].has_data;)
+        //         __asm__("hlt");
+
+        read_byte[port - 1].has_data = 0;
+        read_byte_test               = 0;
+        return inb(PS2_DATA_PORT);
+        // uint8_t ret                  = read_byte[port - 1].data;
+        // pic_send_eoi(port == 1 ? 1 : 12);
+        // return ret;
 }
 
 static uint8_t reset_device(uint8_t port)
@@ -285,13 +312,22 @@ uint8_t ps2_init(void)
         ports_enabled[1] = port2_enabled;
 
         // Reset devices
-        if (ports_enabled[0])
-                reset_device(1);
-        if (ports_enabled[1])
-                reset_device(2);
+        if (ports_enabled[0]) {
+                if (reset_device(1))
+                        puts("Failed to reset port 1");
+                else
+                        interrupt_set_handler(PIC_OFFSET + 1, interrupt_irq_1);
+        }
+        if (ports_enabled[1]) {
+                if (reset_device(2))
+                        puts("Failed to reset port 2");
+                else {
+                        interrupt_set_handler(PIC_OFFSET + 12,
+                                              interrupt_irq_12);
+                }
+        }
 
-        // Add interrupt irq0
-        interrupt_set_handler(PIC_OFFSET + 1, interrupt_irq_1);
+        inb(PS2_DATA_PORT);
 
         return 0;
 }

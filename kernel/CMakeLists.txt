@@ -7,6 +7,7 @@ add_subdirectory(arch/i386)
 add_executable(
   los.kernel
   kernel/keyboard.c
+  kernel/mouse.c
   kernel/kernel.c
 )
 
