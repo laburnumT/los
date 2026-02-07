@@ -154,6 +154,9 @@ static void parse_format(const char *restrict *restrict format,
         case 'i':
                 fmt_type->conversion = CONV_SDEC;
                 break;
+        case 'u':
+                fmt_type->conversion = CONV_UDEC;
+                break;
         case 'b':
         case 'B':
                 fmt_type->conversion = CONV_UBIN;
