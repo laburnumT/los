@@ -15,3 +15,14 @@ AllowShortFunctionsOnASingleLine: None
 IndentPPDirectives: BeforeHash
 QualifierAlignment: Custom
 QualifierOrder: ['inline', 'static', 'constexpr', 'volatile', 'const', 'restrict', 'type' ]
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex:           '^"(.*)\.h'
+    Priority:        3
+  - Regex:           '^<kernel/.*\.h>$'
+    Priority:        2
+  - Regex:           '^<.*\.h>$'
+    Priority:        1
+  - Regex:           '.*'
+    Priority:        4
+IncludeIsMainRegex: ''
