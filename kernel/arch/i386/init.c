@@ -3,10 +3,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <kernel/interrupt.h>
+#include <kernel/panic.h>
+
 #include "gdt.h"
 #include "idt.h"
-#include "kernel/interrupt.h"
-#include "kernel/panic.h"
 #include "mm.h"
 #include "ps2.h"
 

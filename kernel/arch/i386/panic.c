@@ -1,6 +1,6 @@
 #include <stddef.h>
 
-#include "kernel/interrupt.h"
+#include <kernel/interrupt.h>
 
 [[noreturn]] void panic(void)
 {
