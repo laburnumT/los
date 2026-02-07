@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <kernel/panic.h>
+
 #include "boot.h"
-#include "kernel/panic.h"
 #include "tss.h"
 
 enum : uint8_t {
