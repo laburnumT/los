@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "kernel/panic.h"
+#include <kernel/panic.h>
 
 enum : uint32_t {
         MM_ADDR_MASK = 0xFFFFF000,
