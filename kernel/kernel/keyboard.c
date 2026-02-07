@@ -1,6 +1,6 @@
-#include <kernel/keyboard.h>
-
 #include <stdint.h>
+
+#include <kernel/keyboard.h>
 
 static uint8_t shift_l_pressed = 0;
 static uint8_t shift_r_pressed = 0;
