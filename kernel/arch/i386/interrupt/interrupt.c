@@ -20,7 +20,7 @@ static void interrupt_cpu_13(struct interrupt_stack_frame *frame)
                 panic();
         printf("External: %u\n", error_code & 0x1);
         char *str;
-        switch (error_code & 0x3) {
+        switch (error_code & 0x6) {
         case 0:
                 str = "GDT";
                 break;
