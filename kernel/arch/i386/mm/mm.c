@@ -184,8 +184,9 @@ static enum ptde_attributes convert_attributes(enum mm_gp attr)
 
 void mm_add_memory(uint64_t addr, uint64_t size)
 {
-        for (size_t i = 0; addr + (uint64_t)i * MM_PAGE_SIZE < addr + size; ++i)
-                mm_add_page(addr);
+        size_t pages = size / (uint64_t)MM_PAGE_SIZE;
+        for (size_t i = 0; i < pages; ++i)
+                mm_add_page(addr + (uint64_t)i * MM_PAGE_SIZE);
 }
 
 uintptr_t mm_get_phys_addr(uintptr_t addr)
