@@ -6,8 +6,8 @@ add_subdirectory(arch/i386)
 
 add_executable(
   los.kernel
-  kernel/keyboard.c
   kernel/kernel.c
+  kernel/keyboard.c
 )
 
 target_link_options(

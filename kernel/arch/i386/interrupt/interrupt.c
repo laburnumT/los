@@ -79,7 +79,8 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
         if (frame->interrupt < PIC_OFFSET)
                 printf("Unhandled exception: %u\n", frame->interrupt);
         else
-                printf("Unhandled interrupt: %u\n", frame->interrupt - PIC_OFFSET);
+                printf("Unhandled interrupt: %u\n",
+                       frame->interrupt - PIC_OFFSET);
 
         panic();
 }
