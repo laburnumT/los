@@ -2,6 +2,7 @@ add_library(
   libk
   stdio.c
   stdlib.c
+  stdlib_memory.c
   string.c
 )
 
