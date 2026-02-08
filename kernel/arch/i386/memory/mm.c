@@ -68,7 +68,7 @@ extern const uintptr_t VIRT_ADDRESS_BASE;
 
 struct page_table_entry *page_tables_virt[1024];
 
-static void *mm_fpa_alloc_from_page_table1(enum ptde_attributes attributes);
+static void *mm_alloc_page_from_page_table1(enum ptde_attributes attributes);
 
 static struct page_table_entry create_pte(uintptr_t addr, uint8_t global,
                                           uint8_t attributes)
@@ -81,7 +81,7 @@ static struct page_directory_entry create_pde(size_t idx,
                                               enum ptde_attributes attributes)
 {
         struct page_table_entry *pt =
-            mm_fpa_alloc_from_page_table1(PTDE_PRESENT | PTDE_WRITE);
+            mm_alloc_page_from_page_table1(PTDE_PRESENT | PTDE_WRITE);
         memset(pt, 0, sizeof(*pt));
         page_tables_virt[idx]           = pt;
         struct page_directory_entry pde = {
@@ -158,7 +158,7 @@ static uint8_t is_subset_rough(enum ptde_attributes bigger,
         return (bigger & smaller) == smaller;
 }
 
-static void *mm_fpa_alloc_from_page_table1(enum ptde_attributes attributes)
+static void *mm_alloc_page_from_page_table1(enum ptde_attributes attributes)
 {
         for (size_t i = 0; i < sizeof(page_table1) / sizeof(*page_table1);
              ++i) {
@@ -264,7 +264,7 @@ void *mm_alloc_pages(enum mm_prot attributes, size_t cnt)
         panic();
 }
 
-void *mm_fpa_alloc_addr(void *phys_addr, enum mm_prot attributes)
+void *mm_alloc_addr(void *phys_addr, enum mm_prot attributes)
 {
         enum ptde_attributes attr = convert_attributes(attributes);
         attr |= PTDE_PRESENT;
@@ -295,7 +295,7 @@ void *mm_fpa_alloc_addr(void *phys_addr, enum mm_prot attributes)
         panic();
 }
 
-void mm_pfa_dealloc(void *addr, uint8_t phys_alloc)
+void mm_free_page(void *addr, uint8_t phys_alloc)
 {
         struct page_table_entry *pte = get_pte_from_address((uintptr_t)addr);
         if (!phys_alloc)

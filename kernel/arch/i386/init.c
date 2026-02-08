@@ -15,7 +15,7 @@
 static void get_boot_info_1(uintptr_t mb_info_loc)
 {
         struct multiboot_info_1 *mb_info =
-            mm_fpa_alloc_addr((void *)mb_info_loc, MM_PROT_EMPTY);
+            mm_alloc_addr((void *)mb_info_loc, MM_PROT_EMPTY);
         if (mb_info->flags & INIT_MB_MEM) {
                 printf(
                     "Mem: %zu-%zu\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -24,24 +24,24 @@ static void get_boot_info_1(uintptr_t mb_info_loc)
                 printf("Boot disk stuff I guess\n");
         }
         if (mb_info->flags & INIT_MB_CMDLINE) {
-                char *tmp = mm_fpa_alloc_addr(mb_info->cmdline, MM_PROT_EMPTY);
+                char *tmp = mm_alloc_addr(mb_info->cmdline, MM_PROT_EMPTY);
                 if (*tmp > ' ')
                         printf("Cmdline: %s\n", tmp);
-                mm_pfa_dealloc(tmp, 1);
+                mm_free_page(tmp, 1);
         }
         if (mb_info->flags & INIT_MB_MMAP) {
                 for (uintptr_t offset = 0; offset < mb_info->mmap_length;) {
-                        struct multiboot_mmap_entry *mme = mm_fpa_alloc_addr(
+                        struct multiboot_mmap_entry *mme = mm_alloc_addr(
                             (void *)(mb_info->mmap_addr + offset),
                             MM_PROT_EMPTY);
                         if (mme->type == INIT_MB_MEM_AVAILABLE) {
                                 mm_add_memory(mme->addr, mme->len);
                         }
                         offset += mme->size + sizeof(mme->size);
-                        mm_pfa_dealloc(mme, 1);
+                        mm_free_page(mme, 1);
                 }
         }
-        mm_pfa_dealloc(mb_info, 1);
+        mm_free_page(mb_info, 1);
 }
 
 static void get_boot_info(uintptr_t mb_info_loc, uint32_t magic)
