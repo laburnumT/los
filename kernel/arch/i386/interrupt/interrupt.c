@@ -89,8 +89,11 @@ void interrupt_set_handler(uint8_t n,
                            void (*handler)(struct interrupt_stack_frame *frame))
 {
         isr_handlers[n] = handler;
-        if (n >= PIC_OFFSET)
+        if (n >= PIC_OFFSET) {
+                if (n - PIC_OFFSET >= 8)
+                        pic_clear_mask(2);
                 pic_clear_mask(n - PIC_OFFSET);
+        }
 }
 
 void isr_init(void)
