@@ -19,7 +19,7 @@ execute_process(
 
 add_subdirectory(gdt)
 add_subdirectory(interrupt)
-add_subdirectory(memory)
+add_subdirectory(mm)
 add_subdirectory(ps2)
 
 add_library(
@@ -37,7 +37,7 @@ target_link_libraries(
   libc_headers
   gdt
   interrupt
-  memory
+  mm
   ps2
   ${CMAKE_CURRENT_SOURCE_DIR}/crti.s
   ${CRTBEGIN_O}

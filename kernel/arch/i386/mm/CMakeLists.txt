@@ -1,11 +1,11 @@
 add_library(
-  memory
+  mm
 
   mm.c
 )
 
 target_link_libraries(
-  memory
+  mm
   libc_headers
   i386
 )
