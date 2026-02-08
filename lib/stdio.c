@@ -264,7 +264,7 @@ static void rev_string(char *restrict buff, size_t len)
                         mod = 2;                                               \
                         break;                                                 \
                 default:                                                       \
-                        unreachable();                               \
+                        unreachable();                                         \
                 }                                                              \
                 size_t cnt = 0;                                                \
                                                                                \
