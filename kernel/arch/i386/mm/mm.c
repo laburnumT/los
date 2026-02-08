@@ -219,10 +219,11 @@ void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
         __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
 }
 
-static size_t find_consecutive_entries(struct page_table_entry pt[1024],
+static size_t find_consecutive_entries(size_t pd_idx,
+                                       struct page_table_entry pt[1024],
                                        size_t cnt)
 {
-        for (size_t idx = 0; idx < 1024 - cnt + 1; ++idx) {
+        for (size_t idx = pd_idx ? 0 : 1; idx < 1024 - cnt + 1; ++idx) {
                 uint8_t found = 1;
                 for (size_t i = 0; i < cnt; ++i) {
                         if (pt[idx + i].attributes & PTDE_PRESENT) {
@@ -251,7 +252,7 @@ void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
                 if (!is_subset_rough(pde->attributes, attr))
                         continue;
                 struct page_table_entry *pt = page_tables_virt[pd_idx];
-                size_t pt_idx               = find_consecutive_entries(pt, cnt);
+                size_t pt_idx = find_consecutive_entries(pd_idx, pt, cnt);
                 if (pt_idx == 1024)
                         continue;
 
