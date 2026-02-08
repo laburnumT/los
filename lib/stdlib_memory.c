@@ -32,7 +32,7 @@ static struct mm_header *get_mem(size_t size)
                 size = 0x1000;
 
         size_t pages          = (size - 1) / 0x1000 + 1;
-        struct mm_header *ret = mm_alloc_pages(MM_PROT_WRITE, pages);
+        struct mm_header *ret = mm_alloc_pages(MM_GP_RW, pages);
         ret->size             = size - sizeof(*ret);
         free(ret->memory);
         return free_base.next;

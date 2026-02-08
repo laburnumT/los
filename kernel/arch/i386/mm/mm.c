@@ -172,11 +172,13 @@ static void *mm_alloc_page_from_page_table1(enum ptde_attributes attributes)
         panic();
 }
 
-static enum ptde_attributes convert_attributes(enum mm_prot attr)
+static enum ptde_attributes convert_attributes(enum mm_gp attr)
 {
         enum ptde_attributes ret = 0;
-        if (attr & MM_PROT_WRITE)
+        if (attr & MM_GP_WRITE || attr & MM_GP_RW)
                 ret |= PTDE_WRITE;
+        if (attr & MM_GP_USER)
+                ret |= PTDE_USER_MODE;
         return ret;
 }
 
@@ -233,7 +235,7 @@ static size_t find_consecutive_entries(struct page_table_entry pt[1024],
         return 1024;
 }
 
-void *mm_alloc_pages(enum mm_prot attributes, size_t cnt)
+void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
 {
         enum ptde_attributes attr =
             convert_attributes(attributes) | PTDE_PRESENT;
@@ -263,7 +265,7 @@ void *mm_alloc_pages(enum mm_prot attributes, size_t cnt)
         panic();
 }
 
-void *mm_alloc_addr(void *phys_addr, enum mm_prot attributes)
+void *mm_alloc_addr(void *phys_addr, enum mm_gp attributes)
 {
         enum ptde_attributes attr = convert_attributes(attributes);
         attr |= PTDE_PRESENT;

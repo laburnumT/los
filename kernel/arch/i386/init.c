@@ -15,7 +15,7 @@
 static void get_boot_info_1(uintptr_t mb_info_loc)
 {
         struct multiboot_info_1 *mb_info =
-            mm_alloc_addr((void *)mb_info_loc, MM_PROT_EMPTY);
+            mm_alloc_addr((void *)mb_info_loc, MM_GP_READ);
         if (mb_info->flags & INIT_MB_MEM) {
                 printf(
                     "Mem: %zu-%zu\n", mb_info->mem_lower, mb_info->mem_upper);
@@ -24,7 +24,7 @@ static void get_boot_info_1(uintptr_t mb_info_loc)
                 printf("Boot disk stuff I guess\n");
         }
         if (mb_info->flags & INIT_MB_CMDLINE) {
-                char *tmp = mm_alloc_addr(mb_info->cmdline, MM_PROT_EMPTY);
+                char *tmp = mm_alloc_addr(mb_info->cmdline, MM_GP_READ);
                 if (*tmp > ' ')
                         printf("Cmdline: %s\n", tmp);
                 mm_free_page(tmp, 1);
@@ -32,8 +32,7 @@ static void get_boot_info_1(uintptr_t mb_info_loc)
         if (mb_info->flags & INIT_MB_MMAP) {
                 for (uintptr_t offset = 0; offset < mb_info->mmap_length;) {
                         struct multiboot_mmap_entry *mme = mm_alloc_addr(
-                            (void *)(mb_info->mmap_addr + offset),
-                            MM_PROT_EMPTY);
+                            (void *)(mb_info->mmap_addr + offset), MM_GP_READ);
                         if (mme->type == INIT_MB_MEM_AVAILABLE) {
                                 mm_add_memory(mme->addr, mme->len);
                         }

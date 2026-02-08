@@ -31,7 +31,7 @@ uintptr_t mm_get_phys_addr(uintptr_t addr);
 void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
                           enum ptde_attributes attributes);
 
-void *mm_alloc_addr(void *phys_addr, enum mm_prot attributes);
+void *mm_alloc_addr(void *phys_addr, enum mm_gp attributes);
 void mm_free_page(void *addr, uint8_t phys_alloc);
 
 void mm_get_page_info(void *addr);
