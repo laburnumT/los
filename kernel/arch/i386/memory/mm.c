@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <kernel/mm.h>
 #include <kernel/panic.h>
 
 enum : uint32_t {
@@ -172,6 +173,14 @@ static void *mm_fpa_alloc_from_page_table1(enum ptde_attributes attributes)
         panic();
 }
 
+static enum ptde_attributes convert_attributes(enum mm_prot attr)
+{
+        enum ptde_attributes ret = 0;
+        if (attr & MM_PROT_WRITE)
+                ret |= PTDE_WRITE;
+        return ret;
+}
+
 void mm_add_memory(uint64_t addr, uint64_t size)
 {
         for (size_t i = 0; addr + (uint64_t)i * MM_PAGE_SIZE < addr + size; ++i)
@@ -208,24 +217,65 @@ void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
         __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
 }
 
-void *mm_fpa_alloc(enum ptde_attributes attributes)
+static size_t find_consecutive_entries(struct page_table_entry pt[1024],
+                                       size_t cnt)
 {
-        attributes |= PTDE_PRESENT;
-        uint64_t page = mm_get_free_page();
-        return mm_fpa_alloc_addr((void *)page, attributes);
+        for (size_t idx = 0; idx < 1024 - cnt + 1; ++idx) {
+                uint8_t found = 1;
+                for (size_t i = 0; i < cnt; ++i) {
+                        if (pt[idx + i].attributes & PTDE_PRESENT) {
+                                found = 0;
+                                break;
+                        }
+                }
+                if (found)
+                        return idx;
+        }
+        return 1024;
 }
 
-void *mm_fpa_alloc_addr(void *phys_addr, enum ptde_attributes attributes)
+void *mm_alloc_pages(enum mm_prot attributes, size_t cnt)
 {
-        attributes |= PTDE_PRESENT;
+        enum ptde_attributes attr =
+            convert_attributes(attributes) | PTDE_PRESENT;
+
         for (size_t pd_idx = 0;
              pd_idx < sizeof(page_directory) / sizeof(*page_directory);
              ++pd_idx) {
                 struct page_directory_entry *pde = page_directory + pd_idx;
                 if (!(pde->attributes & PTDE_PRESENT)) {
-                        page_directory[pd_idx] = create_pde(pd_idx, attributes);
+                        page_directory[pd_idx] = create_pde(pd_idx, attr);
                 }
-                if (!is_subset_rough(pde->attributes, attributes))
+                if (!is_subset_rough(pde->attributes, attr))
+                        continue;
+                struct page_table_entry *pt = page_tables_virt[pd_idx];
+                size_t pt_idx               = find_consecutive_entries(pt, cnt);
+                if (pt_idx == 1024)
+                        continue;
+
+                for (size_t i = 0; i < cnt; ++i) {
+                        uint64_t phys_addr = mm_get_free_page();
+                        pt[pt_idx + i]     = create_pte(
+                            (uintptr_t)phys_addr & MM_ADDR_MASK, 0, attr);
+                }
+                return (void *)(get_virt_address(pd_idx, pt_idx));
+        }
+        printf("OUT OF MEMORY\n");
+        panic();
+}
+
+void *mm_fpa_alloc_addr(void *phys_addr, enum mm_prot attributes)
+{
+        enum ptde_attributes attr = convert_attributes(attributes);
+        attr |= PTDE_PRESENT;
+        for (size_t pd_idx = 0;
+             pd_idx < sizeof(page_directory) / sizeof(*page_directory);
+             ++pd_idx) {
+                struct page_directory_entry *pde = page_directory + pd_idx;
+                if (!(pde->attributes & PTDE_PRESENT)) {
+                        page_directory[pd_idx] = create_pde(pd_idx, attr);
+                }
+                if (!is_subset_rough(pde->attributes, attr))
                         continue;
                 struct page_table_entry *pt = page_tables_virt[pd_idx];
                 for (size_t pt_idx = 0; pt_idx < 1024; ++pt_idx) {
@@ -233,7 +283,7 @@ void *mm_fpa_alloc_addr(void *phys_addr, enum ptde_attributes attributes)
                                 pt[pt_idx] = create_pte((uintptr_t)phys_addr &
                                                             MM_ADDR_MASK,
                                                         0,
-                                                        attributes);
+                                                        attr);
                                 return (
                                     void *)(get_virt_address(pd_idx, pt_idx) +
                                             ((uintptr_t)phys_addr %
