@@ -144,8 +144,7 @@ static uint64_t mm_get_free_page(void)
                 printf("Out of memory\n");
                 panic();
         }
-
-        return available_pages.addr[available_pages.pos--];
+        return available_pages.addr[--available_pages.pos];
 }
 
 static uint8_t is_subset_rough(enum ptde_attributes bigger,
