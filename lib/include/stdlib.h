@@ -1,11 +1,8 @@
 #ifndef LOS_LIB_STDLIB_H
 #define LOS_LIB_STDLIB_H
 
+#include <mm/mm.h>
 #include <stddef.h>
-
-#if defined(__is_libk) || defined(__is_kernel)
-        #include <kernel/mm.h>
-#endif
 
 int atoi(const char *nptr);
 long int strtol(const char *restrict nptr, char **restrict endptr, int base);

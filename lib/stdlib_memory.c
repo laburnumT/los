@@ -1,5 +1,6 @@
 #include "stdlib.h"
 
+#include <mm/mm.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -40,16 +41,32 @@ static uint8_t flags_match(struct mm_header *h, enum mm_gp flags)
         return h->flags == flags;
 }
 #else
-static void set_flags(struct mm_header *h, enum mm_get flags)
+static void set_flags(struct mm_header *h, enum mm_gp flags)
 {
         (void)h;
         (void)flags;
 }
-static uint8_t flags_match(struct mm_header *h, enum mm_get flags)
+static uint8_t flags_match(struct mm_header *h, enum mm_gp flags)
 {
+        (void)h;
+        (void)flags;
         return 1;
 }
+static void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
+{
+        (void)attributes;
+        (void)cnt;
+        return nullptr;
+}
 #endif
+
+static void *alloc_pages(enum mm_gp attributes, size_t cnt)
+{
+        if (__is_defined(__is_libk))
+                return mm_alloc_pages(attributes, cnt);
+        if (__is_defined(__is_libc))
+                return nullptr;
+}
 
 static void get_mem(size_t size, enum mm_gp flags)
 {
@@ -58,7 +75,7 @@ static void get_mem(size_t size, enum mm_gp flags)
                 size = 0x1000;
 
         size_t pages          = (size - 1) / 0x1000 + 1;
-        struct mm_header *ret = mm_alloc_pages(flags, pages);
+        struct mm_header *ret = alloc_pages(flags, pages);
         set_flags(ret, flags);
         ret->size = size - sizeof(*ret);
         free(ret->memory);
