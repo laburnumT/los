@@ -27,6 +27,6 @@ void gdt_init(void);
 void gdt_reload_segments(void);
 
 // Set in jump_ring.s
-void jump_ring(void *location);
+void jump_ring(void *location, void *user_stack);
 
 #endif

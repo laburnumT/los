@@ -10,8 +10,9 @@ jump_ring:
     mov fs, ax
     mov gs, ax
 
-    mov edx, DWORD PTR [esp + 0x8]
-    mov eax, esp
+    mov edx, DWORD PTR [esp + 4]
+    mov ecx, DWORD PTR [esp + 8]
+    mov eax, ecx
     push (4 * 8) | 3
     push eax
     pushf
