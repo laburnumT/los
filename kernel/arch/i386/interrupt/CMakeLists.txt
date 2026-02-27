@@ -10,6 +10,6 @@ add_library(
 
 target_link_libraries(
   interrupt
-  libc_headers
+  lib_headers
   i386
 )

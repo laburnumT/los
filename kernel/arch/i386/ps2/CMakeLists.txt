@@ -6,6 +6,6 @@ add_library(
 
 target_link_libraries(
   ps2
-  libc_headers
+  lib_headers
   i386
 )

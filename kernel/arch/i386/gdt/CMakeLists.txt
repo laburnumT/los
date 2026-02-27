@@ -7,6 +7,6 @@ add_library(
 
 target_link_libraries(
   gdt
-  libc_headers
+  lib_headers
   i386
 )

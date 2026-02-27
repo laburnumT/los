@@ -24,12 +24,12 @@ target_include_directories(
 )
 
 add_library(
-  libc_headers
+  lib_headers
   INTERFACE
 )
 
 target_include_directories(
-  libc_headers
+  lib_headers
   INTERFACE
   include
 )

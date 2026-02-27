@@ -6,6 +6,6 @@ add_library(
 
 target_link_libraries(
   mm
-  libc_headers
+  lib_headers
   i386
 )

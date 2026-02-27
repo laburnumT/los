@@ -34,7 +34,7 @@ add_library(
 target_link_libraries(
   i386
   PUBLIC
-  libc_headers
+  lib_headers
   gdt
   interrupt
   mm
