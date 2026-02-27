@@ -6,6 +6,7 @@
 #include <kernel/interrupt.h>
 #include <kernel/mm.h>
 #include <kernel/panic.h>
+#include <kernel/syscall.h>
 
 #include "gdt.h"
 #include "idt.h"
@@ -72,6 +73,10 @@ void init_arch(uintptr_t mb_info_loc, uint32_t magic)
         puts("Set up GDT");
         idt_init();
         puts("Set up IDT");
+        syscall_init();
+        puts("Set up syscall");
+        interrupt_enable();
+
         if (ps2_init() == 0)
                 puts("Set up PS/2");
 

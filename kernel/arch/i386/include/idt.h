@@ -14,6 +14,9 @@ enum idt_gate_type : uint8_t {
 enum : uintptr_t { PIC_OFFSET = 0x20 };
 
 void idt_init(void);
+void idt_update_entry(uint8_t n, uint16_t segment_selector,
+                      enum idt_gate_type gate_type, uint8_t priv_level,
+                      uint8_t present);
 void idt_interrupt_enable(void);
 void idt_interrupt_disable(void);
 

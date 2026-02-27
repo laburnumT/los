@@ -45,6 +45,21 @@ static void idt_set(uint16_t size, uintptr_t offset)
         __asm__ volatile("lidt [%0]\n" ::"m"(idtr) : "memory");
 }
 
+void idt_update_entry(uint8_t n, uint16_t segment_selector,
+                      enum idt_gate_type gate_type, uint8_t priv_level,
+                      uint8_t present)
+{
+        if (priv_level > 3)
+                return;
+
+        idt_encode(idt + n,
+                   (uintptr_t)isr_table[n],
+                   segment_selector,
+                   gate_type,
+                   priv_level,
+                   present);
+}
+
 void idt_init(void)
 {
         for (uint16_t i = 0; i < 256; ++i) {
