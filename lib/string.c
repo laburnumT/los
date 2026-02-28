@@ -49,6 +49,16 @@ char *strncpy(char *restrict dest, const char *restrict src, size_t n)
         return tmp;
 }
 
+int strcmp(const char *s1, const char *s2)
+{
+        const unsigned char *c1 = (const unsigned char *)s1;
+        const unsigned char *c2 = (const unsigned char *)s2;
+        for (; *c1 && *c1 == *c2; ++c1, ++c2)
+                ;
+
+        return *c1 - *c2;
+}
+
 void *memset(void *s, int c, size_t n)
 {
         unsigned char *s_cpy = s;
@@ -61,10 +71,8 @@ int memcmp(const void *s1, const void *s2, size_t n)
 {
         const unsigned char *c1 = s1;
         const unsigned char *c2 = s2;
-        for (size_t i = 0; i < n; ++i) {
-                if (c1[i] == c2[i])
-                        continue;
-                return c1[i] - c2[i];
-        }
-        return 0;
+        for (size_t i = 0; i < n && *c1 == *c2; ++i, ++c1, ++c2)
+                ;
+
+        return c1 - c2;
 }
