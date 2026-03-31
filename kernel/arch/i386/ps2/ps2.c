@@ -61,11 +61,21 @@ enum : uint8_t {
 static uint8_t ports_enabled[2] = {};
 static uint8_t read_byte        = 0;
 
+static uint8_t ps2_ob_full(void)
+{
+        return inb(PS2_STATUS_PORT) & PS2_STATUS_OB_FULL;
+}
+
+static uint8_t ps2_ib_full(void)
+{
+        return inb(PS2_STATUS_PORT) & PS2_STATUS_IB_FULL;
+}
+
 static uint8_t ps2_inb(enum ps2_port port)
 {
         if (port == PS2_STATUS_PORT)
                 return inb(port);
-        for (; !(inb(PS2_STATUS_PORT) & PS2_STATUS_OB_FULL);)
+        for (; !ps2_ob_full();)
                 __asm__("pause");
 
         return inb(port);
@@ -73,8 +83,7 @@ static uint8_t ps2_inb(enum ps2_port port)
 
 static uint8_t ps2_outb(enum ps2_port port, uint8_t data, uint8_t allow_read)
 {
-        for (uint8_t i = 0; ps2_inb(PS2_STATUS_PORT) & PS2_STATUS_IB_FULL;
-             ++i) {
+        for (uint8_t i = 0; ps2_ib_full(); ++i) {
                 if (i == 5) {
                         printf(
                             "Failed to write to PS/2 port because input buffer is still set\n");
