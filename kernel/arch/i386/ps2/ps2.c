@@ -94,6 +94,7 @@ static uint8_t ps2_outb(enum ps2_port port, uint8_t data, uint8_t allow_read)
                 __asm__("pause");
         }
         outb(port, data);
+        outb(0x80, 0);
         return 0;
 }
 
@@ -237,8 +238,12 @@ uint8_t ps2_init(void)
         ps2_outb(PS2_COMMAND_PORT, PS2_COMMAND_DISABLE_PORT1, 1);
         ps2_outb(PS2_COMMAND_PORT, PS2_COMMAND_DISABLE_PORT2, 1);
 
+        pic_send_eoi(1);
+
         // Flush buffer
         inb(PS2_DATA_PORT);
+
+        pic_send_eoi(1);
 
         // Disable irq, clock, and translation for port 1
         uint8_t config_byte = read_config(1);
@@ -246,6 +251,8 @@ uint8_t ps2_init(void)
                        ~PS2_CONTROL_PORT1_CLOCK_DISABLED &
                        ~PS2_CONTROL_PORT1_TRANSLATION_ENABLED;
         set_config(config_byte, 1);
+
+        pic_send_eoi(1);
 
         // Perform self test
         config_byte = read_config(1);
@@ -255,6 +262,8 @@ uint8_t ps2_init(void)
                 return 1;
         }
         set_config(config_byte, 1);
+
+        pic_send_eoi(1);
 
         // Check for 2 channels
         ps2_outb(PS2_COMMAND_PORT, PS2_COMMAND_ENABLE_PORT2, 1);
@@ -268,6 +277,8 @@ uint8_t ps2_init(void)
                 set_config(config_byte, 1);
         }
 
+        pic_send_eoi(1);
+
         // Test interfaces
         uint8_t port1_enabled = !test_port(1);
         uint8_t port2_enabled = is_dual_channel ? !test_port(2) : 0;
@@ -276,6 +287,8 @@ uint8_t ps2_init(void)
                 puts("Failed to initialise any ports");
                 return 1;
         }
+
+        pic_send_eoi(1);
 
         // Enable devices
         if (port1_enabled)
@@ -293,14 +306,22 @@ uint8_t ps2_init(void)
         ports_enabled[0] = port1_enabled;
         ports_enabled[1] = port2_enabled;
 
+        pic_send_eoi(1);
+
         // Reset devices
         if (ports_enabled[0])
                 reset_device(1);
         if (ports_enabled[1])
                 reset_device(2);
 
-        // Add interrupt irq0
+        pic_send_eoi(1);
+
+        // Add interrupt irq1
         interrupt_set_handler(PIC_OFFSET + 1, interrupt_irq_1);
+
+        pic_send_eoi(1);
+
+        ps2_inb(PS2_DATA_PORT);
 
         return 0;
 }
