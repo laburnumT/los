@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-EXTRA_FLAGS=""
+EXTRA_FLAGS="-audiodev pa,id=snd0 -machine pcspk-audiodev=snd0"
 DEBUG_FLAGS=""
 MODE="-kernel kernel/los.kernel"
 
