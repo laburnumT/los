@@ -36,6 +36,7 @@ page_table1:
 	.skip 4096
 scratch_space:
 	.skip 4096
+	.skip 4096
 # The kernel entry point.
 .section .multiboot.text, "a"
 .global _start
