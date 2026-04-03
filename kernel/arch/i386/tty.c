@@ -8,6 +8,8 @@
 #include "port.h"
 #include "vga.h"
 
+#include "pcspeaker.c"
+
 static size_t terminal_row;
 static size_t terminal_column;
 static uint8_t terminal_colour;
@@ -112,6 +114,11 @@ void tty_putchar(char c)
                 terminal_column += 4;
                 break;
         case '\b':
+                if (terminal_column == 0){
+                        play_sound(880);
+                        for (uint32_t i = 0; i < 3276800; ++i);
+                        stop_sound();
+                }
                 if (terminal_column) {
                         --terminal_column;
                         tty_putentryat(' ',
