@@ -63,22 +63,24 @@ static void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
 static void *alloc_pages(enum mm_gp attributes, size_t cnt)
 {
         if (__is_defined(__is_libk))
-                return mm_alloc_pages(attributes, cnt);
+                return mm_alloc_pages(cnt, attributes);
         if (__is_defined(__is_libc))
                 return nullptr;
 }
 
-static void get_mem(size_t size, enum mm_gp flags)
+static uint8_t get_mem(size_t size, enum mm_gp flags)
 {
         size += sizeof(struct mm_header);
-        if (size < 0x1000)
-                size = 0x1000;
-
         size_t pages          = (size - 1) / 0x1000 + 1;
+        size                  = pages * 0x1000;
         struct mm_header *ret = alloc_pages(flags, pages);
+        if (ret == nullptr)
+                return 1;
+
         set_flags(ret, flags);
         ret->size = size - sizeof(*ret);
         free(ret->memory);
+        return 0;
 }
 
 static void *_malloc(size_t size, enum mm_gp flags)
@@ -101,7 +103,8 @@ static void *_malloc(size_t size, enum mm_gp flags)
                         }
                 }
                 if (h->next == &free_base) {
-                        get_mem(size, flags);
+                        if (get_mem(size, flags))
+                                return nullptr;
                         h = &free_base;
                 }
         }
