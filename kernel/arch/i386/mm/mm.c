@@ -10,8 +10,9 @@
 #include <kernel/panic.h>
 
 enum : uint32_t {
-        MM_ADDR_MASK       = 0xFFFFF000,
-        MM_PAGES_INIT_SIZE = 2,
+        MM_ADDR_MASK             = 0xFFFFF000,
+        MM_PAGES_INIT_SIZE       = 2,
+        MM_PAGE_TABLE_TABLES_IDX = 1,
 };
 
 enum : uint16_t {
@@ -65,12 +66,11 @@ static struct mm_available_pages *available_pages = &available_pages_init;
 
 extern struct page_directory_entry page_directory[1024];
 extern struct page_table_entry page_table1[1024];
-extern char scratch_space[4096 * 2];
+extern struct page_table_entry page_table_page_tables[1024];
+extern char scratch_space[4096 * MM_PAGES_INIT_SIZE];
 extern const uintptr_t VIRT_ADDRESS_BASE;
 
 static struct page_table_entry *page_tables_virt[1024];
-
-static void *mm_alloc_page_from_page_table1(enum ptde_attributes attributes);
 
 static struct page_table_entry create_pte(uintptr_t addr, uint8_t global,
                                           uint8_t attributes)
@@ -79,11 +79,39 @@ static struct page_table_entry create_pte(uintptr_t addr, uint8_t global,
             .val = attributes + ((global & 0x1) << 8) + (addr & MM_ADDR_MASK)};
 }
 
+static uint64_t mm_get_free_page(void)
+{
+        if (available_pages->pos == 0) {
+                printf("Out of memory\n");
+                panic();
+        }
+        return available_pages->addr[--available_pages->pos];
+}
+
+static uintptr_t get_virt_address(size_t pd_idx, size_t pt_idx)
+{
+        return (pd_idx << (32 - 10)) + (pt_idx << (32 - 20));
+}
+
+static struct page_table_entry *get_new_pt(void)
+{
+        for (size_t i = 0; i < 1024; ++i) {
+                if (!(page_table_page_tables[i].attributes & PTDE_PRESENT)) {
+                        const uintptr_t page = mm_get_free_page();
+                        page_table_page_tables[i] =
+                            create_pte(page, 0, PTDE_PRESENT | PTDE_WRITE);
+                        return (
+                            struct page_table_entry *)(get_virt_address(1, i));
+                }
+        }
+        printf("OUT OF MEMORY\n");
+        panic();
+}
+
 static struct page_directory_entry create_pde(size_t idx,
                                               enum ptde_attributes attributes)
 {
-        struct page_table_entry *pt =
-            mm_alloc_page_from_page_table1(PTDE_PRESENT | PTDE_WRITE);
+        struct page_table_entry *pt = get_new_pt();
         memset(pt, 0, sizeof(*pt));
         page_tables_virt[idx]           = pt;
         struct page_directory_entry pde = {
@@ -127,11 +155,6 @@ static struct page_table_entry *get_pte_from_address(uintptr_t addr)
         return pte;
 }
 
-static uintptr_t get_virt_address(size_t pd_idx, size_t pt_idx)
-{
-        return (pd_idx << (32 - 10)) + (pt_idx << (32 - 20));
-}
-
 static void mm_add_page(uint64_t addr)
 {
         if (available_pages->pos == available_pages->size) {
@@ -151,15 +174,6 @@ static void mm_add_page(uint64_t addr)
         available_pages->addr[available_pages->pos++] = addr;
 }
 
-static uint64_t mm_get_free_page(void)
-{
-        if (available_pages->pos == 0) {
-                printf("Out of memory\n");
-                panic();
-        }
-        return available_pages->addr[--available_pages->pos];
-}
-
 static uint8_t is_subset_rough(enum ptde_attributes bigger,
                                enum ptde_attributes smaller)
 {
@@ -168,21 +182,6 @@ static uint8_t is_subset_rough(enum ptde_attributes bigger,
         bigger &= mask;
         smaller &= mask;
         return (bigger & smaller) == smaller;
-}
-
-static void *mm_alloc_page_from_page_table1(enum ptde_attributes attributes)
-{
-        for (size_t i = 0; i < sizeof(page_table1) / sizeof(*page_table1);
-             ++i) {
-                if (!(page_table1[i].attributes & PTDE_PRESENT)) {
-                        const uintptr_t page = mm_get_free_page();
-                        page_table1[i] =
-                            create_pte(page, 0, PTDE_PRESENT | attributes);
-                        return (void *)(get_virt_address(768, i));
-                }
-        }
-        printf("OUT OF MEMORY\n");
-        panic();
 }
 
 static enum ptde_attributes convert_attributes(enum mm_gp attr)
@@ -232,49 +231,63 @@ void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
         __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
 }
 
-static size_t find_consecutive_entries(size_t pd_idx,
-                                       struct page_table_entry pt[1024],
-                                       size_t cnt)
+void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
 {
-        for (size_t idx = pd_idx ? 0 : 1; idx < 1024 - cnt + 1; ++idx) {
-                uint8_t found = 1;
-                for (size_t i = 0; i < cnt && idx + i < 1024; ++i) {
-                        if (pt[idx + i].attributes & PTDE_PRESENT) {
-                                found = 0;
-                                break;
-                        }
-                }
-                if (found)
-                        return idx;
-        }
-        return 1024;
-}
+        if (cnt > available_pages->pos)
+                return nullptr;
 
-void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
-{
         enum ptde_attributes attr =
             convert_attributes(attributes) | PTDE_PRESENT;
 
-        for (size_t pd_idx = 0;
-             pd_idx < sizeof(page_directory) / sizeof(*page_directory);
+        size_t found = 0;
+        size_t starting_pd_idx, starting_pt_idx;
+        for (size_t pd_idx = MM_PAGE_TABLE_TABLES_IDX + 1; pd_idx < 1024;
              ++pd_idx) {
+                if (!found)
+                        starting_pd_idx = pd_idx;
+
                 struct page_directory_entry *pde = page_directory + pd_idx;
-                if (!(pde->attributes & PTDE_PRESENT)) {
+                if (!(pde->attributes & PTDE_PRESENT))
                         page_directory[pd_idx] = create_pde(pd_idx, attr);
-                }
-                if (!is_subset_rough(pde->attributes, attr))
+
+                if (!is_subset_rough(pde->attributes, attr)) {
+                        found = 0;
                         continue;
+                }
                 struct page_table_entry *pt = page_tables_virt[pd_idx];
-                size_t pt_idx = find_consecutive_entries(pd_idx, pt, cnt);
-                if (pt_idx == 1024)
+
+                for (size_t pt_idx = pd_idx ? 0 : 1;
+                     pt_idx < 1024 && found < cnt;
+                     ++pt_idx) {
+                        if (pt[pt_idx].attributes & PTDE_PRESENT) {
+                                found = 0;
+                                continue;
+                        }
+                        if (!found)
+                                starting_pt_idx = pt_idx;
+                        ++found;
+                }
+
+                if (found != cnt)
                         continue;
 
-                for (size_t i = 0; i < cnt; ++i) {
-                        uint64_t phys_addr = mm_get_free_page();
-                        pt[pt_idx + i]     = create_pte(
+                for (size_t i      = 0,
+                            pd_idx = starting_pd_idx,
+                            pt_idx = starting_pt_idx;
+                     i < cnt;
+                     ++i) {
+                        uint64_t phys_addr               = mm_get_free_page();
+                        page_tables_virt[pd_idx][pt_idx] = create_pte(
                             (uintptr_t)phys_addr & MM_ADDR_MASK, 0, attr);
+                        ++pt_idx;
+                        if (pt_idx == 1024) {
+                                ++pd_idx;
+                                pt_idx = 0;
+                        }
                 }
-                return (void *)(get_virt_address(pd_idx, pt_idx));
+
+                return (
+                    void *)(get_virt_address(starting_pd_idx, starting_pt_idx));
         }
         printf("OUT OF MEMORY\n");
         panic();
@@ -284,8 +297,7 @@ void *mm_alloc_addr(void *phys_addr, enum mm_gp attributes)
 {
         enum ptde_attributes attr = convert_attributes(attributes);
         attr |= PTDE_PRESENT;
-        for (size_t pd_idx = 0;
-             pd_idx < sizeof(page_directory) / sizeof(*page_directory);
+        for (size_t pd_idx = MM_PAGE_TABLE_TABLES_IDX + 1; pd_idx < 1024;
              ++pd_idx) {
                 struct page_directory_entry *pde = page_directory + pd_idx;
                 if (!(pde->attributes & PTDE_PRESENT)) {
@@ -349,18 +361,19 @@ void mm_init(void)
 {
         mm_add_memory((uint64_t)mm_get_phys_addr((uintptr_t)scratch_space),
                       sizeof(scratch_space));
-        page_tables_virt[768] = page_table1;
+        page_tables_virt[MM_PAGE_TABLE_TABLES_IDX] = page_table_page_tables;
+        page_tables_virt[768]                      = page_table1;
 
         available_pages =
             malloc(sizeof(*available_pages) +
                    available_pages->size * sizeof(*available_pages->addr));
+        if (!available_pages) {
+                puts("Error setting up memory");
+                panic();
+        }
         memcpy(available_pages,
                &available_pages_init,
                sizeof(available_pages_init) +
                    available_pages_init.size *
                        sizeof(*available_pages_init.addr));
-        if (!available_pages) {
-                puts("Error setting up memory");
-                panic();
-        }
 }

@@ -27,12 +27,14 @@ stack_top:
 # Preallocate pages used for paging. Don't hard-code addresses and assume they
 # are available, as the bootloader might have loaded its multiboot structures or
 # modules there. This lets the bootloader know it must avoid the addresses.
-.globl page_directory, page_table1, scratch_space
+.globl page_directory, page_table1, page_table_page_tables, scratch_space
 .section .bss, "aw", @nobits
 .align 4096
 page_directory:
 	.skip 4096
 page_table1:
+	.skip 4096
+page_table_page_tables:
 	.skip 4096
 scratch_space:
 	.skip 4096
@@ -82,6 +84,7 @@ _start:
 	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
 	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 0,       OFFSET page_table1 - VIRT_ADDRESS_BASE_BOOT + 0x003
 	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 768 * 4, OFFSET page_table1 - VIRT_ADDRESS_BASE_BOOT + 0x003
+	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 1 * 4,       OFFSET page_table_page_tables - VIRT_ADDRESS_BASE_BOOT + 0x003
 
 	# Set cr3 to the address of the page_directory.
 	lea ecx, [page_directory - VIRT_ADDRESS_BASE_BOOT]
