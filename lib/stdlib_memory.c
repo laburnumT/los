@@ -52,7 +52,7 @@ static uint8_t flags_match(struct mm_header *h, enum mm_gp flags)
         (void)flags;
         return 1;
 }
-static void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
+static void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
 {
         (void)attributes;
         (void)cnt;
@@ -60,7 +60,7 @@ static void *mm_alloc_pages(enum mm_gp attributes, size_t cnt)
 }
 #endif
 
-static void *alloc_pages(enum mm_gp attributes, size_t cnt)
+static void *alloc_pages(size_t cnt, enum mm_gp attributes)
 {
         if (__is_defined(__is_libk))
                 return mm_alloc_pages(cnt, attributes);
@@ -73,7 +73,7 @@ static uint8_t get_mem(size_t size, enum mm_gp flags)
         size += sizeof(struct mm_header);
         size_t pages          = (size - 1) / 0x1000 + 1;
         size                  = pages * 0x1000;
-        struct mm_header *ret = alloc_pages(flags, pages);
+        struct mm_header *ret = alloc_pages(pages, flags);
         if (ret == nullptr)
                 return 1;
 
