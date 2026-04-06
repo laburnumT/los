@@ -7,10 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __is_libk
-        #include <kernel/keyboard.h>
-        #include <kernel/tty.h>
-#endif
+#include "_helper.h"
+
+int k_putchar(int c);
+int k_getchar(void);
+int c_putchar(int c);
+int c_getchar(void);
 
 enum : uint8_t {
         FMT_LEFT_JUSTIFIED = 0x1 << 0,
@@ -374,21 +376,18 @@ static int fmt_to_str(char *restrict buff, const struct stdio_format_type *fmt,
 
 int putchar(int c)
 {
-#ifdef __is_libk
-        tty_putchar((char)c);
-#else
-        #error NOT IMPLEMENTED
-#endif
-        return c;
+        if (__is_defined(__is_libk))
+                return k_putchar(c);
+        if (__is_defined(__is_libc))
+                return c_putchar(c);
 }
 
 int getchar(void)
 {
-#ifdef __is_libk
-        return keyboard_getchar();
-#else
-        #error NOT IMPLEMENTED
-#endif
+        if (__is_defined(__is_libk))
+                return k_getchar();
+        if (__is_defined(__is_libc))
+                return c_getchar();
 }
 
 static int put_str(const char *s)

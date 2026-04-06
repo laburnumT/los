@@ -1,3 +1,5 @@
+add_subdirectory(arch/i386)
+
 add_library(
   libk
   stdio.c
@@ -10,6 +12,12 @@ target_compile_definitions(
   libk
   PRIVATE
   __is_libk
+)
+
+target_link_libraries(
+  libk
+  PUBLIC
+  libk_i386
 )
 
 target_link_options(
