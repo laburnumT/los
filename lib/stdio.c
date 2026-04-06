@@ -401,9 +401,10 @@ static int put_str(const char *s)
 
 int puts(const char *s)
 {
-        put_str(s);
-        putchar('\n');
+        if (put_str(s) == EOF)
+                return EOF;
 
+        putchar('\n');
         return 0;
 }
 
@@ -426,7 +427,7 @@ int vprintf(const char *restrict format, va_list arg)
                         continue;
                 }
                 char buff[100];
-                fmt_to_str(buff, &fmt_type, &arg);
+                cnt += fmt_to_str(buff, &fmt_type, &arg);
                 put_str(buff);
         }
 
