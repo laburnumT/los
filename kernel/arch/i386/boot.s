@@ -84,7 +84,7 @@ _start:
 	# Map the page table to both virtual addresses 0x00000000 and 0xC0000000.
 	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 0,       OFFSET page_table1 - VIRT_ADDRESS_BASE_BOOT + 0x003
 	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 768 * 4, OFFSET page_table1 - VIRT_ADDRESS_BASE_BOOT + 0x003
-	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 1 * 4,       OFFSET page_table_page_tables - VIRT_ADDRESS_BASE_BOOT + 0x003
+	mov DWORD PTR page_directory - VIRT_ADDRESS_BASE_BOOT + 769 * 4,       OFFSET page_table_page_tables - VIRT_ADDRESS_BASE_BOOT + 0x003
 
 	# Set cr3 to the address of the page_directory.
 	lea ecx, [page_directory - VIRT_ADDRESS_BASE_BOOT]

@@ -12,7 +12,7 @@
 enum : uint32_t {
         MM_ADDR_MASK             = 0xFFFFF000,
         MM_PAGES_INIT_SIZE       = 2,
-        MM_PAGE_TABLE_TABLES_IDX = 1,
+        MM_PAGE_TABLE_TABLES_IDX = 769,
 };
 
 enum : uint16_t {
@@ -100,8 +100,8 @@ static struct page_table_entry *get_new_pt(void)
                         const uintptr_t page = mm_get_free_page();
                         page_table_page_tables[i] =
                             create_pte(page, 0, PTDE_PRESENT | PTDE_WRITE);
-                        return (
-                            struct page_table_entry *)(get_virt_address(1, i));
+                        return (struct page_table_entry *)(get_virt_address(
+                            MM_PAGE_TABLE_TABLES_IDX, i));
                 }
         }
         printf("OUT OF MEMORY\n");
@@ -239,10 +239,16 @@ void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
         enum ptde_attributes attr =
             convert_attributes(attributes) | PTDE_PRESENT;
 
+        struct {
+                size_t start, stop;
+        } range = {
+            .start = attr & PTDE_USER_MODE ? 1 : MM_PAGE_TABLE_TABLES_IDX + 1,
+            .stop  = attr & PTDE_USER_MODE ? 768 : 1024,
+        };
+
         size_t found = 0;
         size_t starting_pd_idx, starting_pt_idx;
-        for (size_t pd_idx = MM_PAGE_TABLE_TABLES_IDX + 1; pd_idx < 1024;
-             ++pd_idx) {
+        for (size_t pd_idx = range.start; pd_idx < range.stop; ++pd_idx) {
                 if (!found)
                         starting_pd_idx = pd_idx;
 
