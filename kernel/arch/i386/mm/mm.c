@@ -229,7 +229,7 @@ void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
 
 void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
 {
-        if (cnt > available_pages->pos)
+        if (cnt > available_pages->pos || !cnt)
                 return nullptr;
 
         enum ptde_attributes attr =
