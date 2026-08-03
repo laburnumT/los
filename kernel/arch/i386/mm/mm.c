@@ -120,6 +120,11 @@ static struct page_directory_entry create_pde(size_t idx,
         return pde;
 }
 
+static void flush_tlb(void *addr)
+{
+        __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
+}
+
 static size_t get_pde_index_from_address(uintptr_t addr)
 {
         return addr >> (32 - 10);
@@ -228,7 +233,7 @@ void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
         }
 
         pte->attributes |= PTDE_PRESENT;
-        __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
+        flush_tlb(addr);
 }
 
 void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
@@ -335,7 +340,7 @@ void mm_free_page(void *addr, uint8_t phys_alloc)
         if (!phys_alloc)
                 mm_add_page(pte->addr & MM_ADDR_MASK);
         pte->val = 0;
-        __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
+        flush_tlb(addr);
 }
 
 void mm_get_page_info(void *addr)
