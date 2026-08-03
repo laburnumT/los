@@ -12,7 +12,8 @@
 enum : uint32_t {
         MM_ADDR_MASK             = 0xFFFFF000,
         MM_PAGES_INIT_SIZE       = 2,
-        MM_PAGE_TABLE_TABLES_IDX = 769,
+        MM_PAGE_TABLES_VIRT_BASE = 0xFFC00000,
+        MM_PAGE_DIRECTORY_VIRT   = 0xFFFFF000,
 };
 
 enum : uint16_t {
@@ -65,12 +66,9 @@ static struct mm_available_pages {
 static struct mm_available_pages *available_pages = &available_pages_init;
 
 extern struct page_directory_entry page_directory[1024];
-extern struct page_table_entry page_table1[1024];
-extern struct page_table_entry page_table_page_tables[1024];
 extern char scratch_space[4096 * MM_PAGES_INIT_SIZE];
 extern const uintptr_t VIRT_ADDRESS_BASE;
 
-static struct page_table_entry *page_tables_virt[1024];
 
 static struct page_table_entry create_pte(uintptr_t addr, uint8_t global,
                                           uint8_t attributes)
@@ -93,36 +91,31 @@ static uintptr_t get_virt_address(size_t pd_idx, size_t pt_idx)
         return (pd_idx << (32 - 10)) + (pt_idx << (32 - 20));
 }
 
-static struct page_table_entry *get_new_pt(void)
+static struct page_table_entry *get_pt_virt(size_t pd_idx)
 {
-        for (size_t i = 0; i < 1024; ++i) {
-                if (!(page_table_page_tables[i].attributes & PTDE_PRESENT)) {
-                        const uintptr_t page = mm_get_free_page();
-                        page_table_page_tables[i] =
-                            create_pte(page, 0, PTDE_PRESENT | PTDE_WRITE);
-                        return (struct page_table_entry *)(get_virt_address(
-                            MM_PAGE_TABLE_TABLES_IDX, i));
-                }
-        }
-        printf("OUT OF MEMORY\n");
-        panic();
+        return (struct page_table_entry *)(pd_idx * MM_PAGE_SIZE +
+                                           MM_PAGE_TABLES_VIRT_BASE);
 }
 
-static struct page_directory_entry create_pde(size_t idx,
-                                              enum ptde_attributes attributes)
+static struct page_directory_entry *get_pd_virt(void)
 {
-        struct page_table_entry *pt = get_new_pt();
-        memset(pt, 0, sizeof(*pt));
-        page_tables_virt[idx]           = pt;
-        struct page_directory_entry pde = {
-            .val = mm_get_phys_addr((uintptr_t)pt) & MM_ADDR_MASK};
-        pde.attributes = attributes;
-        return pde;
+        return (struct page_directory_entry *)MM_PAGE_DIRECTORY_VIRT;
 }
 
 static void flush_tlb(void *addr)
 {
         __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
+}
+
+static void create_pde(size_t idx, enum ptde_attributes attributes)
+{
+        uintptr_t phys_addr             = mm_get_free_page();
+        struct page_directory_entry *pd = get_pd_virt();
+        pd[idx].val                     = phys_addr & MM_ADDR_MASK;
+        pd[idx].attributes              = attributes;
+        struct page_table_entry *pt     = get_pt_virt(idx);
+        flush_tlb(pt);
+        memset(pt, 0, MM_PAGE_SIZE);
 }
 
 static size_t get_pde_index_from_address(uintptr_t addr)
@@ -137,7 +130,7 @@ static size_t get_pte_index_from_address(uintptr_t addr)
 
 static struct page_directory_entry *get_pde_from_address(uintptr_t addr)
 {
-        return page_directory + get_pde_index_from_address(addr);
+        return get_pd_virt() + get_pde_index_from_address(addr);
 }
 
 static struct page_table_entry *get_pte_from_address(uintptr_t addr)
@@ -147,11 +140,9 @@ static struct page_table_entry *get_pte_from_address(uintptr_t addr)
                 printf("%p not present\n", addr);
                 panic();
         }
-        size_t index = get_pte_index_from_address(addr);
-        struct page_table_entry *pte =
-            (struct page_table_entry *)((pde->val & MM_ADDR_MASK) +
-                                        VIRT_ADDRESS_BASE) +
-            index;
+        size_t pd_idx                = get_pde_index_from_address(addr);
+        size_t pt_idx                = get_pte_index_from_address(addr);
+        struct page_table_entry *pte = get_pt_virt(pd_idx) + pt_idx;
         if (!(pte->attributes & PTDE_PRESENT)) {
                 printf("%p not present\n", addr);
                 panic();
@@ -247,8 +238,8 @@ void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
         struct {
                 size_t start, stop;
         } range = {
-            .start = attr & PTDE_USER_MODE ? 1 : MM_PAGE_TABLE_TABLES_IDX + 1,
-            .stop  = attr & PTDE_USER_MODE ? 768 : 1024,
+            .start = attr & PTDE_USER_MODE ? 1 : 768,
+            .stop  = attr & PTDE_USER_MODE ? 768 : 1023,
         };
 
         size_t found = 0;
@@ -257,15 +248,15 @@ void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
                 if (!found)
                         starting_pd_idx = pd_idx;
 
-                struct page_directory_entry *pde = page_directory + pd_idx;
+                struct page_directory_entry *pde = get_pd_virt() + pd_idx;
                 if (!(pde->attributes & PTDE_PRESENT))
-                        page_directory[pd_idx] = create_pde(pd_idx, attr);
+                        create_pde(pd_idx, attr);
 
                 if (!is_subset_rough(pde->attributes, attr)) {
                         found = 0;
                         continue;
                 }
-                struct page_table_entry *pt = page_tables_virt[pd_idx];
+                struct page_table_entry *pt = get_pt_virt(pd_idx);
 
                 for (size_t pt_idx = pd_idx ? 0 : 1;
                      pt_idx < 1024 && found < cnt;
@@ -287,8 +278,9 @@ void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
                             pt_idx = starting_pt_idx;
                      i < cnt;
                      ++i) {
-                        uint64_t phys_addr               = mm_get_free_page();
-                        page_tables_virt[pd_idx][pt_idx] = create_pte(
+                        uint64_t phys_addr = mm_get_free_page();
+                        auto pt            = get_pt_virt(pd_idx);
+                        pt[pt_idx]         = create_pte(
                             (uintptr_t)phys_addr & MM_ADDR_MASK, 0, attr);
                         ++pt_idx;
                         if (pt_idx == 1024) {
@@ -308,15 +300,21 @@ void *mm_alloc_addr(void *phys_addr, enum mm_gp attributes)
 {
         enum ptde_attributes attr = convert_attributes(attributes);
         attr |= PTDE_PRESENT;
-        for (size_t pd_idx = MM_PAGE_TABLE_TABLES_IDX + 1; pd_idx < 1024;
-             ++pd_idx) {
-                struct page_directory_entry *pde = page_directory + pd_idx;
-                if (!(pde->attributes & PTDE_PRESENT)) {
-                        page_directory[pd_idx] = create_pde(pd_idx, attr);
-                }
+
+        struct {
+                size_t start, stop;
+        } range = {
+            .start = attr & PTDE_USER_MODE ? 1 : 768,
+            .stop  = attr & PTDE_USER_MODE ? 768 : 1023,
+        };
+        for (size_t pd_idx = range.start; pd_idx < range.stop; ++pd_idx) {
+                struct page_directory_entry *pde = get_pd_virt() + pd_idx;
+                if (!(pde->attributes & PTDE_PRESENT))
+                        create_pde(pd_idx, attr);
+
                 if (!is_subset_rough(pde->attributes, attr))
                         continue;
-                struct page_table_entry *pt = page_tables_virt[pd_idx];
+                struct page_table_entry *pt = get_pt_virt(pd_idx);
                 for (size_t pt_idx = 0; pt_idx < 1024; ++pt_idx) {
                         if (!(pt[pt_idx].attributes & PTDE_PRESENT)) {
                                 pt[pt_idx] = create_pte((uintptr_t)phys_addr &
@@ -356,7 +354,7 @@ void mm_get_page_info(void *addr)
         printf("    Accessed: %u\n", pte->attributes & PTDE_ACCESSED ? 1 : 0);
         printf("    Dirty: %u\n", pte->attributes & PTE_DIRTY ? 1 : 0);
         size_t index                          = (uintptr_t)addr >> (32 - 10);
-        const struct page_directory_entry pde = page_directory[index];
+        const struct page_directory_entry pde = get_pd_virt()[index];
         if (pde.attributes & PTDE_PRESENT) {
                 printf("PTE: %p\n", pde.val & MM_ADDR_MASK);
                 printf("  ATTRIBUTES:\n");
@@ -372,8 +370,6 @@ void mm_init(void)
 {
         mm_add_memory((uint64_t)mm_get_phys_addr((uintptr_t)scratch_space),
                       sizeof(scratch_space));
-        page_tables_virt[MM_PAGE_TABLE_TABLES_IDX] = page_table_page_tables;
-        page_tables_virt[768]                      = page_table1;
 
         available_pages =
             malloc(sizeof(*available_pages) +
