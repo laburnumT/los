@@ -10,7 +10,12 @@ __attribute__((weak)) int c_putchar(int c)
         return c;
 }
 
-int c_getchar(void)
+__attribute__((weak)) int c_getchar(void)
 {
+        int c;
+        __asm__("mov eax, 1\n"
+                "int 0x80\n"
+                "mov %0, eax\n"
+                : "=r"(c)::"eax");
         return 0;
 }

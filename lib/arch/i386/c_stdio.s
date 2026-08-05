@@ -16,3 +16,19 @@ c_putchar:
         mov esp, ebp
         pop ebp
         ret
+
+.globl c_getchar
+c_getchar:
+        push ebp
+        mov ebp, esp
+
+        push ebx
+
+        mov eax, 1
+        int 0x80
+
+        pop ebx
+
+        mov esp, ebp
+        pop ebp
+        ret
