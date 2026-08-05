@@ -97,14 +97,15 @@ void gdt_init(void)
                    0,
                    GDT_DATA_PL3,
                    GDT_FLAG_GRANULARITY | GDT_FLAG_SIZE);
+
+        tss      = (typeof(tss)){};
+        tss.ss0  = offsetof(typeof(gdt), kernel_mode_data);
+        tss.esp0 = (uintptr_t)&stack_top;
         gdt_encode(&gdt.tss, sizeof(tss) - 1, (uintptr_t)&tss, GDT_TSS, 0);
 
         gdt_set(sizeof(gdt) - 1, (uintptr_t)&gdt);
         gdt_reload_segments();
 
-        tss      = (typeof(tss)){};
-        tss.ss0  = offsetof(typeof(gdt), kernel_mode_data);
-        tss.esp0 = (uintptr_t)&stack_top;
         __asm__ volatile("ltr %0\n" ::"r"(offsetof(typeof(gdt), tss))
                          : "memory");
 }
