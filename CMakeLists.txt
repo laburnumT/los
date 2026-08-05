@@ -37,6 +37,7 @@ add_compile_options(
 )
 
 add_subdirectory(lib)
+add_subdirectory(bin)
 add_subdirectory(kernel)
 
 target_link_libraries(
