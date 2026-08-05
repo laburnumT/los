@@ -9,6 +9,8 @@
 #include <kernel/mm.h>
 #include <kernel/panic.h>
 
+#include "mm/mm.h"
+
 enum : uint32_t {
         MM_ADDR_MASK             = 0xFFFFF000,
         MM_PAGES_INIT_SIZE       = 2,
@@ -69,21 +71,19 @@ extern struct page_directory_entry page_directory[1024];
 extern char scratch_space[4096 * MM_PAGES_INIT_SIZE];
 extern const uintptr_t VIRT_ADDRESS_BASE;
 
+struct mm_struct {
+        uintptr_t cr3;
+        struct page_directory_entry *pd;
+};
+
+static struct mm_struct *active_address_space = nullptr;
+static struct mm_struct kernel_address_space;
 
 static struct page_table_entry create_pte(uintptr_t addr, uint8_t global,
                                           uint8_t attributes)
 {
         return (struct page_table_entry){
             .val = attributes + ((global & 0x1) << 8) + (addr & MM_ADDR_MASK)};
-}
-
-static uint64_t mm_get_free_page(void)
-{
-        if (available_pages->pos == 0) {
-                printf("Out of memory\n");
-                panic();
-        }
-        return available_pages->addr[--available_pages->pos];
 }
 
 static uintptr_t get_virt_address(size_t pd_idx, size_t pt_idx)
@@ -105,6 +105,14 @@ static struct page_directory_entry *get_pd_virt(void)
 static void flush_tlb(void *addr)
 {
         __asm__ volatile("invlpg [%0]" ::"r"(addr) : "memory");
+}
+
+static struct page_directory_entry
+create_pde_phys(uintptr_t addr, enum ptde_attributes attributes)
+{
+        struct page_directory_entry pde = {.val = addr & MM_ADDR_MASK};
+        pde.attributes                  = attributes;
+        return pde;
 }
 
 static void create_pde(size_t idx, enum ptde_attributes attributes)
@@ -190,6 +198,50 @@ static enum ptde_attributes convert_attributes(enum mm_gp attr)
         return ret;
 }
 
+uint64_t mm_get_free_page(void)
+{
+        if (available_pages->pos == 0) {
+                printf("Out of memory\n");
+                panic();
+        }
+        return available_pages->addr[--available_pages->pos];
+}
+
+struct mm_struct *mm_create_new_mm(void)
+{
+        struct mm_struct *ret = malloc(sizeof(*ret));
+        if (!ret)
+                return nullptr;
+
+        struct page_directory_entry *pd_virt =
+            mm_alloc_page(MM_GP_RW | MM_GP_KERNEL);
+        if (!pd_virt) {
+                free(ret);
+                return nullptr;
+        }
+        uintptr_t pd_phys = mm_get_phys_addr((uintptr_t)pd_virt);
+
+        ret->cr3 = pd_phys;
+        ret->pd  = pd_virt;
+        memset(ret->pd, 0, MM_PAGE_SIZE);
+
+        for (size_t i = 768; i < 1024; ++i)
+                ret->pd[i] = get_pd_virt()[i];
+
+        ret->pd[1023] = (struct page_directory_entry){
+            .val = (ret->cr3 & MM_ADDR_MASK) | PTDE_PRESENT | PTDE_WRITE};
+
+        return ret;
+}
+
+void mm_switch_address_space(struct mm_struct *space)
+{
+        if (!space)
+                return;
+        active_address_space = space;
+        __asm__ volatile("mov cr3, %0\n" ::"r"(space->cr3) : "memory");
+}
+
 void mm_add_memory(uint64_t addr, uint64_t size)
 {
         size_t pages = size / (uint64_t)MM_PAGE_SIZE;
@@ -225,6 +277,50 @@ void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
 
         pte->attributes |= PTDE_PRESENT;
         flush_tlb(addr);
+}
+
+// TODO(laburnumT): Use error enum
+int mm_map_page(struct mm_struct *space, uintptr_t vaddr, uintptr_t paddr,
+                enum mm_gp attributes)
+{
+        if (!space)
+                return 1;
+        enum ptde_attributes attr =
+            convert_attributes(attributes) | PTDE_PRESENT;
+
+        size_t pd_idx = get_pde_index_from_address(vaddr);
+        size_t pt_idx = get_pte_index_from_address(vaddr);
+
+        struct page_directory_entry *pde = &space->pd[pd_idx];
+        if (!(pde->attributes & PTDE_PRESENT)) {
+                uintptr_t page = mm_get_free_page();
+                void *virt_page =
+                    mm_alloc_addr((void *)page, MM_GP_RW | MM_GP_KERNEL);
+                memset(virt_page, 0, MM_PAGE_SIZE);
+                mm_free_page(virt_page, 1);
+                *pde = create_pde_phys(page, attr);
+        }
+        uintptr_t pt_paddr = pde->val & MM_ADDR_MASK;
+        struct page_table_entry *pt =
+            mm_alloc_addr((void *)pt_paddr, MM_GP_RW | MM_GP_KERNEL);
+        pt[pt_idx].val        = paddr & MM_ADDR_MASK;
+        pt[pt_idx].attributes = attr;
+        mm_free_page(pt, 1);
+        flush_tlb((void *)vaddr);
+
+        return 0;
+}
+
+int mm_map_range(struct mm_struct *space, uintptr_t vaddr, uintptr_t paddr,
+                 size_t cnt, enum mm_gp attributes)
+{
+        for (size_t i = 0; i < cnt;
+             ++i, vaddr += MM_PAGE_SIZE, paddr += MM_PAGE_SIZE) {
+                int err = mm_map_page(space, vaddr, paddr, attributes);
+                if (err)
+                        return err;
+        }
+        return 0;
 }
 
 void *mm_alloc_pages(size_t cnt, enum mm_gp attributes)
@@ -383,4 +479,8 @@ void mm_init(void)
                sizeof(available_pages_init) +
                    available_pages_init.size *
                        sizeof(*available_pages_init.addr));
+        kernel_address_space.cr3 =
+            (uintptr_t)page_directory - VIRT_ADDRESS_BASE;
+        kernel_address_space.pd = get_pd_virt();
+        active_address_space    = &kernel_address_space;
 }

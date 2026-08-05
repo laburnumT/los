@@ -4,8 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include <kernel/mm.h>
-
 #include "_helper.h"
 
 enum FLAG_ENUM ptde_attributes : uint8_t {
@@ -31,12 +29,6 @@ uintptr_t mm_get_phys_addr(uintptr_t addr);
 void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
                           enum ptde_attributes attributes);
 
-void *mm_alloc_addr(void *phys_addr, enum mm_gp attributes);
-void mm_free_page(void *addr, uint8_t phys_alloc);
-
 void mm_get_page_info(void *addr);
-
-void *map_memory(uintptr_t info_phys_addr, size_t size);
-void unmap_memory(void *virt_addr);
 
 #endif
