@@ -19,6 +19,7 @@ add_library(
   libc_i386
   c_stdio.s
   c_stdio.c
+  c_stdlib.s
 )
 
 target_compile_definitions(

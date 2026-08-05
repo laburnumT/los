@@ -12,6 +12,8 @@
         #include <kernel/mm.h>
 #endif
 
+void *c_mm_alloc_pages(size_t cnt, enum mm_gp attributes);
+
 struct mm_header {
         struct mm_header *next;
 #ifdef __is_libk
@@ -65,7 +67,7 @@ static void *alloc_pages(size_t cnt, enum mm_gp attributes)
         if (__is_defined(__is_libk))
                 return mm_alloc_pages(cnt, attributes);
         if (__is_defined(__is_libc))
-                return nullptr;
+                return c_mm_alloc_pages(cnt, attributes);
 }
 
 static uint8_t get_mem(size_t size, enum mm_gp flags)
