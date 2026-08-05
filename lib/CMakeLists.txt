@@ -1,3 +1,4 @@
+add_subdirectory(elf)
 add_subdirectory(arch/i386)
 
 add_library(
@@ -18,6 +19,7 @@ target_link_libraries(
   libk
   PUBLIC
   libk_i386
+  libelfk
 )
 
 target_link_options(
