@@ -43,3 +43,34 @@ target_include_directories(
   INTERFACE
   include
 )
+
+add_library(
+  libc
+  stdio.c
+  stdlib.c
+  stdlib_memory.c
+  string.c
+)
+
+target_compile_definitions(
+  libc
+  PRIVATE
+  __is_libc
+)
+
+target_link_libraries(
+  libc
+  PUBLIC
+  libc_i386
+)
+
+target_link_options(
+  libc
+  PRIVATE
+)
+
+target_include_directories(
+  libc
+  PUBLIC
+  include
+)
