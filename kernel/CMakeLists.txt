@@ -13,16 +13,19 @@ add_executable(
 target_link_options(
   los.kernel
   PRIVATE
-  -T ${CMAKE_CURRENT_SOURCE_DIR}/arch/i386/linker.ld -nostdlib
+  -T ${CMAKE_CURRENT_SOURCE_DIR}/arch/i386/linker.ld
+  -nostdlib
 )
 
 target_link_libraries(
   los.kernel
-  PUBLIC
+  PRIVATE
 
+  "-Wl,--start-group"
   libk
   i386
   gcc
+  "-Wl,--end-group"
 )
 
 add_library(

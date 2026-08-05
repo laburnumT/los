@@ -35,6 +35,7 @@ add_library(
 target_link_libraries(
   i386
   PUBLIC
+  libk
   lib_headers
   gdt
   interrupt

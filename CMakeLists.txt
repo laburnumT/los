@@ -46,12 +46,6 @@ target_link_libraries(
   lib_headers
 )
 
-target_link_libraries(
-  libk
-  PUBLIC
-  kernel_headers
-)
-
 add_custom_target(
   copy_scripts
   ALL
