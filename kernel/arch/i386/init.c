@@ -1,5 +1,8 @@
 #include "init.h"
 
+#include <libelf.h>
+#include <mm/mm.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
@@ -10,8 +13,8 @@
 
 #include "gdt.h"
 #include "idt.h"
-#include "mm.h"
 #include "ps2.h"
+#include "stdlib.h"
 
 static void get_boot_info_1(uintptr_t mb_info_loc)
 {
@@ -81,4 +84,15 @@ void init_arch(uintptr_t mb_info_loc, uint32_t magic)
                 puts("Set up PS/2");
 
         puts("Finished setting up arch");
+
+        static unsigned char code[] = {
+#embed "../../../build/bin/lsh/lsh"
+        };
+
+        struct libelf_state state;
+        libelf_load_elf(code, &state);
+        unsigned char *user_stack = k_malloc(16384, MM_GP_USER | MM_GP_RW);
+
+        jump_ring((void *)state.entry,
+                  (void *)((uintptr_t)(user_stack + 16384) & ~0xF));
 }
