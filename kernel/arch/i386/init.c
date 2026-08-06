@@ -63,6 +63,19 @@ static void get_boot_info(uintptr_t mb_info_loc, uint32_t magic)
         }
 }
 
+void jump_to_userspace(unsigned char *exec, size_t stack_size)
+{
+        struct libelf_state state;
+        libelf_load_elf(exec, &state);
+
+        mm_switch_address_space(state.address_space);
+
+        unsigned char *user_stack = k_malloc(stack_size, MM_GP_USER | MM_GP_RW);
+
+        jump_ring((void *)state.entry,
+                  (void *)((uintptr_t)(user_stack + stack_size) & ~0xF));
+}
+
 void init_arch(uintptr_t mb_info_loc, uint32_t magic)
 {
         puts("Setting up i386 arch");
@@ -84,18 +97,4 @@ void init_arch(uintptr_t mb_info_loc, uint32_t magic)
                 puts("Set up PS/2");
 
         puts("Finished setting up arch");
-
-        static unsigned char code[] = {
-#embed "../../../build/bin/lsh/lsh"
-        };
-
-        struct libelf_state state;
-        libelf_load_elf(code, &state);
-
-        mm_switch_address_space(state.address_space);
-
-        unsigned char *user_stack = k_malloc(16384, MM_GP_USER | MM_GP_RW);
-
-        jump_ring((void *)state.entry,
-                  (void *)((uintptr_t)(user_stack + 16384) & ~0xF));
 }

@@ -8,6 +8,10 @@ void kernel_main(void *boot_info, unsigned int magic)
 {
         tty_initialise();
         init_arch(boot_info, magic);
-        for (;;)
-                ;
+
+        static unsigned char code[] = {
+#embed "../../build/bin/lsh/lsh"
+        };
+
+        jump_to_userspace(code, 16384);
 }
