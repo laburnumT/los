@@ -140,12 +140,12 @@ static enum libelf_error validate_header(const struct elf32_ehdr *hdr)
         return LIBELF_OK;
 }
 
-static uintptr_t map_elf(const char *addr)
+static enum libelf_error map_elf(const char *addr, struct libelf_state *state)
 {
         auto ehdr = (const struct elf32_ehdr *)addr;
         auto phdr = (const struct elf32_phdr *)(addr + ehdr->phoff);
 
-        auto new_mm = mm_create_new_mm();
+        state->address_space = mm_create_new_mm();
 
         for (size_t i = 0; i < ehdr->phnum; ++i) {
                 auto ph = phdr[i];
@@ -178,16 +178,16 @@ static uintptr_t map_elf(const char *addr)
                                        0x1000);
 
                         mm_free_page(vpaddr, 1);
-
-                        mm_map_page(
-                            new_mm, vaddr, paddr, MM_GP_RW | MM_GP_USER);
+                        mm_map_page(state->address_space,
+                                    vaddr,
+                                    paddr,
+                                    MM_GP_RW | MM_GP_USER);
                 }
-                // memcpy((void *)ph.vaddr, addr + ph.offset, ph.filesz);
         }
 
-        mm_switch_address_space(new_mm);
-        // __asm__ volatile("jmp %0\n" ::"r"(ehdr->entry));
-        return ehdr->entry;
+        state->entry = ehdr->entry;
+
+        return LIBELF_OK;
 }
 
 enum libelf_error libelf_load_elf(void *file, struct libelf_state *state)
@@ -204,7 +204,5 @@ enum libelf_error libelf_load_elf(void *file, struct libelf_state *state)
                 return LIBELF_INVALID_ELF;
         }
 
-        state->entry = map_elf((char *)hdr);
-
-        return LIBELF_OK;
+        return map_elf((char *)hdr, state);
 }

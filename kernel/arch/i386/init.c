@@ -91,6 +91,9 @@ void init_arch(uintptr_t mb_info_loc, uint32_t magic)
 
         struct libelf_state state;
         libelf_load_elf(code, &state);
+
+        mm_switch_address_space(state.address_space);
+
         unsigned char *user_stack = k_malloc(16384, MM_GP_USER | MM_GP_RW);
 
         jump_ring((void *)state.entry,

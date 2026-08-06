@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "kernel/mm.h"
+
 enum libelf_error : uint8_t {
         LIBELF_OK,
         LIBELF_INVALID_ELF,
@@ -214,6 +216,7 @@ struct elf32_shdr {
 
 struct libelf_state {
         uintptr_t entry;
+        struct mm_struct *address_space;
 };
 
 enum libelf_error libelf_load_elf(void *file, struct libelf_state *state);
