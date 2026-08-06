@@ -12,11 +12,6 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-execute_process(
-  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/scripts/gen_interrupt_asm.py
-  OUTPUT_FILE ${CMAKE_CURRENT_SOURCE_DIR}/interrupt/interrupt_asm_auto.s
-)
-
 add_subdirectory(gdt)
 add_subdirectory(interrupt)
 add_subdirectory(mm)
