@@ -25,6 +25,7 @@ add_library(
   panic.c
   pit.c
   port.c
+  timer.c
   tty.c
 )
 
