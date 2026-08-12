@@ -10,6 +10,7 @@
 #include "gdt.h"
 #include "idt.h"
 #include "interrupt.h"
+#include "kernel/timer.h"
 
 static uint32_t _write_char(uint32_t c, [[maybe_unused]] uint32_t arg2,
                             [[maybe_unused]] uint32_t arg3,
@@ -37,12 +38,23 @@ static uint32_t _alloc(uint32_t cnt, uint32_t attributes,
         return (uint32_t)mm_alloc_pages(cnt, attributes);
 }
 
+static uint32_t _sleep(uint32_t millis, [[maybe_unused]] uint32_t arg2,
+                       [[maybe_unused]] uint32_t arg3,
+                       [[maybe_unused]] uint32_t arg4,
+                       [[maybe_unused]] uint32_t arg5,
+                       [[maybe_unused]] uint32_t arg6)
+{
+        timer_sleep(millis);
+        return 0;
+}
+
 static uint32_t (*syscall_funcs[])(uint32_t arg1, uint32_t arg2, uint32_t arg3,
                                    uint32_t arg4, uint32_t arg5,
                                    uint32_t arg6) = {
     [LOS_SYS_WRITE_CHAR]  = _write_char,
     [LOS_SYS_READ_CHAR]   = _read_char,
     [LOS_SYS_ALLOC_PAGES] = _alloc,
+    [LOS_SYS_SLEEP]       = _sleep,
 };
 
 static void interrupt_irq_128(struct interrupt_stack_frame *frame)
