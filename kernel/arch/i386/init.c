@@ -10,6 +10,7 @@
 #include <kernel/mm.h>
 #include <kernel/panic.h>
 #include <kernel/syscall.h>
+#include <kernel/timer.h>
 
 #include "gdt.h"
 #include "idt.h"
@@ -95,6 +96,9 @@ void init_arch(uintptr_t mb_info_loc, uint32_t magic)
 
         if (ps2_init() == 0)
                 puts("Set up PS/2");
+
+        timer_init(LOS_TIMER_FREQUENCY);
+        puts("Set up timer");
 
         puts("Finished setting up arch");
 }
