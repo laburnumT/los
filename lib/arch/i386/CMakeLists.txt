@@ -20,6 +20,7 @@ add_library(
   c_stdio.s
   c_stdio.c
   c_stdlib.s
+  c_stdtimer.s
 )
 
 target_compile_definitions(

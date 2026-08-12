@@ -6,6 +6,7 @@ add_library(
   stdio.c
   stdlib.c
   stdlib_memory.c
+  stdtimer.c
   string.c
 )
 
@@ -49,6 +50,7 @@ add_library(
   stdio.c
   stdlib.c
   stdlib_memory.c
+  stdtimer.c
   string.c
 )
 
