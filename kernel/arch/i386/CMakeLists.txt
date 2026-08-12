@@ -23,6 +23,7 @@ add_library(
   boot.s
   init.c
   panic.c
+  pit.c
   port.c
   tty.c
 )
