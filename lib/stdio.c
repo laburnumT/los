@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +41,11 @@ struct stdio_format_type {
                 CONV_PERCENT,
                 // TODO(laburnumT): Support floats
         } conversion;
+};
+
+struct buff {
+        size_t size;
+        char *buff;
 };
 
 static void parse_format(const char *restrict *restrict format,
@@ -231,7 +237,7 @@ static void rev_string(char *restrict buff, size_t len)
 
 #define intN_to_string(t)                                                      \
         static int t##_to_str(                                                 \
-            char *restrict buff, const struct stdio_format_type *fmt, t val)   \
+            struct buff *buff, const struct stdio_format_type *fmt, t val)     \
         {                                                                      \
                 static const char set_table[] = {                              \
                     '0',                                                       \
@@ -271,22 +277,34 @@ static void rev_string(char *restrict buff, size_t len)
                 size_t cnt = 0;                                                \
                                                                                \
                 if (!val) {                                                    \
-                        buff[0] = '0';                                         \
-                        buff[1] = '\0';                                        \
+                        buff->buff[0] = '0';                                   \
+                        buff->buff[1] = '\0';                                  \
                         return 1;                                              \
                 }                                                              \
                 uint8_t is_neg = fmt->conversion == CONV_SDEC && val < 0;      \
                 if (is_neg)                                                    \
                         val = -val;                                            \
                 for (cnt = 0; val > 0; val /= mod) {                           \
-                        buff[cnt++] = set_table[val % mod];                    \
+                        if (cnt >= buff->size) {                               \
+                                buff->size *= 2;                               \
+                                buff->buff =                                   \
+                                    realloc(buff->buff,                        \
+                                            buff->size * sizeof(*buff->buff)); \
+                        }                                                      \
+                        buff->buff[cnt++] = set_table[val % mod];              \
                         if (fmt->conversion == CONV_UHEX_UP)                   \
-                                buff[cnt - 1] = toupper(buff[cnt - 1]);        \
+                                buff->buff[cnt - 1] =                          \
+                                    toupper(buff->buff[cnt - 1]);              \
+                }                                                              \
+                if (cnt + 2 >= buff->size) {                                   \
+                        buff->size = cnt + 2;                                  \
+                        buff->buff = realloc(                                  \
+                            buff->buff, buff->size * sizeof(*buff->buff));     \
                 }                                                              \
                 if (is_neg)                                                    \
-                        buff[cnt++] = '-';                                     \
-                buff[cnt] = '\0';                                              \
-                rev_string(buff, cnt);                                         \
+                        buff->buff[cnt++] = '-';                               \
+                buff->buff[cnt] = '\0';                                        \
+                rev_string(buff->buff, cnt);                                   \
                                                                                \
                 return (int)cnt;                                               \
         }
@@ -303,7 +321,7 @@ intN_to_string(uint64_t);
 intN_to_string(int64_t);
 #pragma GCC diagnostic pop
 
-static int num_fmt_to_str(char *restrict buff,
+static int num_fmt_to_str(struct buff *buff,
                           const struct stdio_format_type *fmt, va_list *va)
 {
         if (fmt->conversion == CONV_SDEC) {
@@ -351,7 +369,7 @@ static int num_fmt_to_str(char *restrict buff,
         }
 }
 
-static int fmt_to_str(char *restrict buff, const struct stdio_format_type *fmt,
+static int fmt_to_str(struct buff *buff, const struct stdio_format_type *fmt,
                       va_list *va)
 {
         size_t cnt = 0;
@@ -361,12 +379,20 @@ static int fmt_to_str(char *restrict buff, const struct stdio_format_type *fmt,
 
         switch (fmt->conversion) {
         case CONV_CHAR:
-                buff[0] = (char)va_arg(*va, int);
-                buff[1] = '\0';
+                buff->buff[0] = (char)va_arg(*va, int);
+                buff->buff[1] = '\0';
                 return 1;
-        case CONV_STR:
-                strcpy(buff, va_arg(*va, char *));
-                return (int)strlen(buff);
+        case CONV_STR: {
+                auto str = va_arg(*va, char *);
+                auto len = strlen(str);
+                if (len + 1 >= buff->size) {
+                        buff->size = len + 1;
+                        buff->buff = realloc(buff->buff,
+                                             buff->size * sizeof(*buff->buff));
+                }
+                strcpy(buff->buff, str);
+                return (int)len;
+        }
         default:
                 unreachable();
         }
@@ -410,6 +436,11 @@ int puts(const char *s)
 
 int vprintf(const char *restrict format, va_list arg)
 {
+        static struct buff buff = {};
+        if (!buff.buff) {
+                buff.size = 100;
+                buff.buff = malloc(buff.size * sizeof(*buff.buff));
+        }
         size_t cnt = 0;
         for (cnt = 0; *format; ++format) {
                 if (*format != '%') {
@@ -426,9 +457,8 @@ int vprintf(const char *restrict format, va_list arg)
                         putchar('%');
                         continue;
                 }
-                char buff[100];
-                cnt += fmt_to_str(buff, &fmt_type, &arg);
-                put_str(buff);
+                cnt += fmt_to_str(&buff, &fmt_type, &arg);
+                put_str(buff.buff);
         }
 
         return (int)cnt;
