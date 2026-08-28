@@ -1,12 +1,12 @@
+#include <_helper.h>
 #include <libelf.h>
+#include <mm/mm.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <kernel/mm.h>
-
-#include "mm/mm.h"
 
 static enum libelf_error validate_header(const struct elf32_ehdr *hdr)
 {
@@ -161,22 +161,20 @@ static enum libelf_error map_elf(const char *addr, struct libelf_state *state)
                         char *vpaddr = mm_alloc_addr((void *)paddr,
                                                      MM_GP_KERNEL | MM_GP_RW);
                         memset(vpaddr, 0, 0x1000);
-                        uintptr_t offset = ph.vaddr - vaddr_start;
-                        if (vaddr == vaddr_start)
-                                memcpy(vpaddr + offset,
-                                       addr + ph.offset,
-                                       0x1000 - offset);
-                        else if (vaddr + 0x1000 == vaddr_end)
-                                memcpy(vpaddr,
-                                       addr + ph.offset +
-                                           (vaddr - vaddr_start - offset),
-                                       (ph.vaddr + ph.memsz) & 0xFFF);
-                        else
-                                memcpy(vpaddr,
-                                       addr + ph.offset +
-                                           (vaddr - vaddr_start - offset),
-                                       0x1000);
 
+                        uintptr_t copy_start = max(vaddr, ph.vaddr);
+                        uintptr_t copy_end =
+                            min(vaddr + 0x1000, ph.vaddr + ph.filesz);
+                        if (copy_start < copy_end) {
+                                size_t copy_size   = copy_end - copy_start;
+                                size_t page_offset = copy_start - vaddr;
+                                size_t file_offset =
+                                    ph.offset + (copy_start - ph.vaddr);
+
+                                memcpy(vpaddr + page_offset,
+                                       addr + file_offset,
+                                       copy_size);
+                        }
                         mm_free_page(vpaddr, 1);
                         mm_map_page(state->address_space,
                                     vaddr,
