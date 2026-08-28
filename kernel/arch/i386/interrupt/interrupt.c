@@ -56,17 +56,10 @@ static void interrupt_cpu_14(struct interrupt_stack_frame *frame)
         printf("SGX violation : %u\n", !!(error_code & (0x1 << 15)));
         printf("Error address : 0x%p\n", error_address);
 
-        if (error_code & 0x1) {
+        if (error_code & 0x1)
                 mm_get_page_info((void *)error_address);
-        }
 
         panic();
-}
-
-static void interrupt_irq_0(struct interrupt_stack_frame *frame)
-{
-        (void)frame;
-        pic_send_eoi(0);
 }
 
 void interrupt_exception_handler(struct interrupt_stack_frame *frame)
@@ -75,6 +68,7 @@ void interrupt_exception_handler(struct interrupt_stack_frame *frame)
                 isr_handlers[frame->interrupt](frame);
                 return;
         }
+        printf("isr %u not present\n", frame->interrupt);
 
         if (frame->interrupt < PIC_OFFSET)
                 printf("Unhandled exception: %u\n", frame->interrupt);
@@ -100,5 +94,4 @@ void isr_init(void)
 {
         interrupt_set_handler(13, interrupt_cpu_13);
         interrupt_set_handler(14, interrupt_cpu_14);
-        interrupt_set_handler(PIC_OFFSET + 0, interrupt_irq_0);
 }
