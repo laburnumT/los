@@ -8,6 +8,7 @@
 #include <kernel/mm.h>
 #include <kernel/syscall.h>
 
+#include "context.h"
 #include "gdt.h"
 #include "idt.h"
 #include "interrupt.h"

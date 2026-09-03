@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "context.h"
 #include "idt.h"
 #include "interrupt.h"
 #include "pic.h"

@@ -6,6 +6,7 @@
 
 #include <kernel/panic.h>
 
+#include "context.h"
 #include "idt.h"
 #include "mm.h"
 #include "pic.h"
