@@ -1,5 +1,7 @@
 #include "string.h"
 
+#include <stdlib.h>
+
 size_t strlen(const char *str)
 {
         size_t len = 0;
@@ -47,6 +49,15 @@ char *strncpy(char *restrict dest, const char *restrict src, size_t n)
                 dest[i] = '\0';
 
         return tmp;
+}
+
+char *strdup(const char *s)
+{
+        char *ret = malloc(strlen(s) + 1);
+        if (!ret)
+                return nullptr;
+        strcpy(ret, s);
+        return ret;
 }
 
 int strcmp(const char *s1, const char *s2)
