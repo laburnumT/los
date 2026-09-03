@@ -1,8 +1,9 @@
+#include "syscall.h"
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 
-#include <kernel/arch/i386/syscall.h>
 #include <kernel/interrupt.h>
 #include <kernel/mm.h>
 #include <kernel/syscall.h>
