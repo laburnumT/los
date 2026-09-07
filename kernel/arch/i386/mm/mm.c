@@ -9,6 +9,7 @@
 #include <kernel/mm.h>
 #include <kernel/panic.h>
 
+#include "cpu.h"
 #include "mm/mm.h"
 
 enum : uint32_t {
@@ -67,17 +68,14 @@ static struct mm_available_pages {
 
 static struct mm_available_pages *available_pages = &available_pages_init;
 
-extern struct page_directory_entry page_directory[1024];
 extern char scratch_space[4096 * MM_PAGES_INIT_SIZE];
-extern const uintptr_t VIRT_ADDRESS_BASE;
 
 struct mm_struct {
         uintptr_t cr3;
         struct page_directory_entry *pd;
 };
 
-static struct mm_struct *active_address_space = nullptr;
-static struct mm_struct kernel_address_space;
+static struct mm_struct *active_address_space = &(struct mm_struct){};
 
 static struct page_table_entry create_pte(uintptr_t addr, uint8_t global,
                                           uint8_t attributes)
@@ -464,6 +462,9 @@ void mm_get_page_info(void *addr)
 
 void mm_init(void)
 {
+        active_address_space->cr3 = get_cr3();
+        active_address_space->pd =
+            (struct page_directory_entry *)MM_PAGE_DIRECTORY_VIRT;
         mm_add_memory((uint64_t)mm_get_phys_addr((uintptr_t)scratch_space),
                       sizeof(scratch_space));
 
@@ -479,8 +480,4 @@ void mm_init(void)
                sizeof(available_pages_init) +
                    available_pages_init.size *
                        sizeof(*available_pages_init.addr));
-        kernel_address_space.cr3 =
-            (uintptr_t)page_directory - VIRT_ADDRESS_BASE;
-        kernel_address_space.pd = get_pd_virt();
-        active_address_space    = &kernel_address_space;
 }
