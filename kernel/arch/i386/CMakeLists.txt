@@ -21,6 +21,7 @@ add_subdirectory(syscall)
 add_library(
   i386
   boot.s
+  cpu.s
   init.c
   panic.c
   pit.c
