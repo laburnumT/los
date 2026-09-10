@@ -19,7 +19,7 @@ add_subdirectory(ps2)
 add_subdirectory(syscall)
 
 add_library(
-  i386
+  ${LOS_ARCH}
   boot.s
   cpu.s
   init.c
@@ -31,7 +31,7 @@ add_library(
 )
 
 target_link_libraries(
-  i386
+  ${LOS_ARCH}
   PUBLIC
   libk
   lib_headers

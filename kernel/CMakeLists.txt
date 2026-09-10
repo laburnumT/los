@@ -2,7 +2,7 @@ add_compile_definitions(__is_kernel)
 
 include_directories(include)
 
-add_subdirectory(arch/i386)
+add_subdirectory(arch/${LOS_ARCH})
 
 add_executable(
   los.kernel
@@ -13,7 +13,7 @@ add_executable(
 target_link_options(
   los.kernel
   PRIVATE
-  -T ${CMAKE_CURRENT_SOURCE_DIR}/arch/i386/linker.ld
+  -T ${CMAKE_CURRENT_SOURCE_DIR}/arch/${LOS_ARCH}/linker.ld
   -nostdlib
 )
 
@@ -23,7 +23,7 @@ target_link_libraries(
 
   "-Wl,--start-group"
   libk
-  i386
+  ${LOS_ARCH}
   gcc
   "-Wl,--end-group"
 )

@@ -8,5 +8,5 @@ add_library(
 target_link_libraries(
   gdt
   lib_headers
-  i386
+  ${LOS_ARCH}
 )

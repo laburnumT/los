@@ -7,5 +7,5 @@ add_library(
 target_link_libraries(
   mm
   lib_headers
-  i386
+  ${LOS_ARCH}
 )

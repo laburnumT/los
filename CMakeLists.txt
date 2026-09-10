@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(CMAKE_SYSTEM_NAME Generic)
-set(CMAKE_SYSTEM_PROCESSOR x86)
-
 set(CMAKE_TRY_COMPILE_TARGET_TYPE "STATIC_LIBRARY")
-set(CMAKE_C_COMPILER i686-elf-gcc)
+set(ROOTFS_DIR "${CMAKE_BINARY_DIR}/rootfs")
 
-set(CMAKE_SYSROOT ${CMAKE_CURRENT_SOURCE_DIR}/sysroot)
 file(
   MAKE_DIRECTORY
-  ${CMAKE_SYSROOT}/usr/include
-  ${CMAKE_SYSROOT}/usr/lib
-  ${CMAKE_SYSROOT}/boot
+  ${ROOTFS_DIR}
 )
 
 if("${CMAKE_BUILD_TYPE}" STREQUAL "OPTIMISED")
@@ -27,7 +21,7 @@ project(
 
 add_compile_options(
   -std=gnu23
-  -g
+  -ggdb3
   -Wall
   -Wextra
   -masm=intel

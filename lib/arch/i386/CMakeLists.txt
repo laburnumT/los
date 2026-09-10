@@ -1,22 +1,22 @@
 add_library(
-  libk_i386
+  libk_${LOS_ARCH}
   k_stdio.c
 )
 
 target_link_libraries(
-  libk_i386
+  libk_${LOS_ARCH}
   PUBLIC
   kernel_headers
 )
 
 target_compile_definitions(
-  libk_i386
+  libk_${LOS_ARCH}
   PRIVATE
   __is_libk
 )
 
 add_library(
-  libc_i386
+  libc_${LOS_ARCH}
   c_stdio.s
   c_stdio.c
   c_stdlib.s
@@ -24,7 +24,7 @@ add_library(
 )
 
 target_compile_definitions(
-  libc_i386
+  libc_${LOS_ARCH}
   PRIVATE
   __is_libc
 )

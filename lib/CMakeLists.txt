@@ -1,5 +1,5 @@
 add_subdirectory(elf)
-add_subdirectory(arch/i386)
+add_subdirectory(arch/${LOS_ARCH})
 
 add_library(
   libk
@@ -19,7 +19,7 @@ target_compile_definitions(
 target_link_libraries(
   libk
   PUBLIC
-  libk_i386
+  libk_${LOS_ARCH}
   libelfk
 )
 
@@ -63,7 +63,7 @@ target_compile_definitions(
 target_link_libraries(
   libc
   PUBLIC
-  libc_i386
+  libc_${LOS_ARCH}
 )
 
 target_link_options(
