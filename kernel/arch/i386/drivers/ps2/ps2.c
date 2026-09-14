@@ -9,7 +9,7 @@
 #include "idt.h"
 #include "interrupt.h"
 
-enum ps2_port : uint16_t {
+enum ps2_port : uint8_t {
         PS2_DATA_PORT    = 0x60,
         PS2_STATUS_PORT  = 0x64,
         PS2_COMMAND_PORT = 0x64,
