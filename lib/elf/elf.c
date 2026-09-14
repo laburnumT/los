@@ -188,7 +188,7 @@ static enum libelf_error map_elf(const char *addr, struct libelf_state *state)
         return LIBELF_OK;
 }
 
-enum libelf_error libelf_load_elf(void *file, struct libelf_state *state)
+enum libelf_error libelf_load_elf(const void *file, struct libelf_state *state)
 {
         auto hdr = (struct elf32_ehdr *)file;
         if (validate_header(hdr) != LIBELF_OK)

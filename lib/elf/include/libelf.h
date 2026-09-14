@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "kernel/mm.h"
+#include <kernel/mm.h>
 
 enum libelf_error : uint8_t {
         LIBELF_OK,
@@ -219,6 +219,6 @@ struct libelf_state {
         struct mm_struct *address_space;
 };
 
-enum libelf_error libelf_load_elf(void *file, struct libelf_state *state);
+enum libelf_error libelf_load_elf(const void *file, struct libelf_state *state);
 
 #endif
