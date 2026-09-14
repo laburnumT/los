@@ -9,6 +9,7 @@ enum {
         INIT_MB_MEM       = 0x1 << 0,
         INIT_MB_BOOT_DISK = 0x1 << 1,
         INIT_MB_CMDLINE   = 0x1 << 2,
+        INIT_MB_MODS      = 0x1 << 3,
         INIT_MB_MMAP      = 0x1 << 6,
 };
 
@@ -103,7 +104,5 @@ struct multiboot_mmap_entry {
                 INIT_MB_MEM_BADRAM,
         } type;
 } __attribute__((__packed__));
-
-void init_arch(uintptr_t mb_info, uint32_t magic);
 
 #endif
