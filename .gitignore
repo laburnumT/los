@@ -10,3 +10,4 @@ sysroot
 .venv/
 
 build/
+optimised/
