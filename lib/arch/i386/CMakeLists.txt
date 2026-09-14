@@ -21,6 +21,8 @@ add_library(
   c_stdio.c
   c_stdlib.s
   c_stdtimer.s
+
+  c_sched.c
 )
 
 target_link_libraries(
