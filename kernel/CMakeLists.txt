@@ -18,6 +18,7 @@ add_executable(
   los.kernel
   kernel/kernel.c
   kernel/keyboard.c
+  kernel/sched.c
 )
 
 target_link_options(

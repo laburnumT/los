@@ -24,6 +24,8 @@ add_library(
   cpu.s
   init.c
   panic.c
+  sched.c
+  sched.s
   timer.c
 )
 
