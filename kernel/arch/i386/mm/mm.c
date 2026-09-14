@@ -1,5 +1,6 @@
 #include "mm.h"
 
+#include <mm/mm.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -10,17 +11,12 @@
 #include <kernel/panic.h>
 
 #include "cpu.h"
-#include "mm/mm.h"
 
 enum : uint32_t {
         MM_ADDR_MASK             = 0xFFFFF000,
         MM_PAGES_INIT_SIZE       = 2,
         MM_PAGE_TABLES_VIRT_BASE = 0xFFC00000,
         MM_PAGE_DIRECTORY_VIRT   = 0xFFFFF000,
-};
-
-enum : uint16_t {
-        MM_PAGE_SIZE = 0x1000,
 };
 
 /* PTE
@@ -69,11 +65,6 @@ static struct mm_available_pages {
 static struct mm_available_pages *available_pages = &available_pages_init;
 
 extern char scratch_space[4096 * MM_PAGES_INIT_SIZE];
-
-struct mm_struct {
-        uintptr_t cr3;
-        struct page_directory_entry *pd;
-};
 
 static struct mm_struct *active_address_space = &(struct mm_struct){};
 
@@ -285,7 +276,7 @@ int mm_map_page(struct mm_struct *space, uintptr_t vaddr, uintptr_t paddr,
                 void *virt_page =
                     mm_alloc_addr((void *)page, MM_GP_RW | MM_GP_KERNEL);
                 memset(virt_page, 0, MM_PAGE_SIZE);
-                mm_free_page(virt_page, 1);
+                mm_free_page_active(virt_page, 1);
                 *pde = create_pde_phys(page, attr);
         }
         uintptr_t pt_paddr = pde->val & MM_ADDR_MASK;
@@ -293,7 +284,7 @@ int mm_map_page(struct mm_struct *space, uintptr_t vaddr, uintptr_t paddr,
             mm_alloc_addr((void *)pt_paddr, MM_GP_RW | MM_GP_KERNEL);
         pt[pt_idx].val        = paddr & MM_ADDR_MASK;
         pt[pt_idx].attributes = attr;
-        mm_free_page(pt, 1);
+        mm_free_page_active(pt, 1);
         flush_tlb((void *)vaddr);
 
         return 0;
@@ -418,13 +409,39 @@ void *mm_alloc_addr(void *phys_addr, enum mm_gp attributes)
         panic();
 }
 
-void mm_free_page(void *addr, uint8_t phys_alloc)
+static void mm_free_page_internal(struct page_table_entry *pte,
+                                  uint8_t phys_alloc)
 {
-        struct page_table_entry *pte = get_pte_from_address((uintptr_t)addr);
         if (!phys_alloc)
                 mm_add_page(pte->addr & MM_ADDR_MASK);
         pte->val = 0;
+}
+
+void mm_free_page_active(void *addr, uint8_t phys_alloc)
+{
+        struct page_table_entry *pte = get_pte_from_address((uintptr_t)addr);
+        mm_free_page_internal(pte, phys_alloc);
         flush_tlb(addr);
+}
+
+void mm_free_page(struct mm_struct *space, void *addr, uint8_t phys_alloc)
+{
+        if (space->cr3 == active_address_space->cr3) {
+                mm_free_page_active(addr, phys_alloc);
+                return;
+        }
+        auto pd_idx       = get_pde_index_from_address((uintptr_t)addr);
+        auto pt_idx       = get_pte_index_from_address((uintptr_t)addr);
+        auto pde          = space->pd + pd_idx;
+        uintptr_t pt_phys = pde->val & MM_ADDR_MASK;
+        struct page_table_entry *pt =
+            mm_alloc_addr((void *)pt_phys, MM_GP_RW | MM_GP_KERNEL);
+
+        auto pte = pt + pt_idx;
+
+        mm_free_page_internal(pte, phys_alloc);
+
+        mm_free_page_active(pt, 1);
 }
 
 void mm_get_page_info(void *addr)
@@ -450,6 +467,40 @@ void mm_get_page_info(void *addr)
                 printf("    Accessed: %u\n",
                        pde.attributes & PTDE_ACCESSED ? 1 : 0);
         }
+}
+
+struct mm_struct *mm_get_active_address_space(void)
+{
+        return active_address_space;
+}
+
+void mm_unmap_userspace(struct mm_struct *space)
+{
+        if (!space || !space->pd)
+                return;
+
+        for (size_t pd_idx = 0; pd_idx < 768; ++pd_idx) {
+                auto pde = space->pd + pd_idx;
+                if (!(pde->attributes & PTDE_PRESENT))
+                        continue;
+
+                uintptr_t pt_phys = pde->val & MM_ADDR_MASK;
+                struct page_table_entry *pt =
+                    mm_alloc_addr((void *)pt_phys, MM_GP_RW | MM_GP_KERNEL);
+
+                for (size_t pt_idx = 0; pt_idx < 1024; ++pt_idx) {
+                        auto pte = pt + pt_idx;
+                        if (!(pte->attributes & PTDE_PRESENT))
+                                continue;
+                        mm_add_page(pte->val & MM_ADDR_MASK);
+                        pte->val = 0;
+                }
+                mm_free_page_active(pt, 1);
+                mm_add_page(pt_phys);
+                pde->val = 0;
+        }
+        mm_add_page(space->cr3);
+        mm_free_page_active(space->pd, 1);
 }
 
 void mm_init(void)

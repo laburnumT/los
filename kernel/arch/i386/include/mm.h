@@ -25,10 +25,26 @@ enum mm_update_attribute_type : uint8_t {
         MM_REMOVE,
 };
 
+enum : uint16_t {
+        MM_PAGE_SIZE = 0x1000,
+};
+
+
+struct mm_struct {
+        uintptr_t cr3;
+        struct page_directory_entry *pd;
+};
+
+extern uintptr_t VIRT_ADDRESS_BASE;
+
 uintptr_t mm_get_phys_addr(uintptr_t addr);
 void mm_update_attributes(void *addr, enum mm_update_attribute_type update,
                           enum ptde_attributes attributes);
 
 void mm_get_page_info(void *addr);
+
+void mm_unmap_userspace(struct mm_struct *space);
+
+void mm_free_page(struct mm_struct *space, void *addr, uint8_t phys_alloc);
 
 #endif

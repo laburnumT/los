@@ -33,7 +33,7 @@ static void get_boot_info_1(uintptr_t mb_info_loc)
                 char *tmp = mm_alloc_addr(mb_info->cmdline, MM_GP_READ);
                 if (*tmp > ' ')
                         printf("Cmdline: %s\n", tmp);
-                mm_free_page(tmp, 1);
+                mm_free_page_active(tmp, 1);
         }
         if (mb_info->flags & INIT_MB_MMAP) {
                 for (uintptr_t offset = 0; offset < mb_info->mmap_length;) {
@@ -43,10 +43,10 @@ static void get_boot_info_1(uintptr_t mb_info_loc)
                                 mm_add_memory(mme->addr, mme->len);
                         }
                         offset += mme->size + sizeof(mme->size);
-                        mm_free_page(mme, 1);
+                        mm_free_page_active(mme, 1);
                 }
         }
-        mm_free_page(mb_info, 1);
+        mm_free_page_active(mb_info, 1);
 }
 
 static void get_boot_info(uintptr_t mb_info_loc, uint32_t magic)

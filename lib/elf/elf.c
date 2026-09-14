@@ -175,7 +175,7 @@ static enum libelf_error map_elf(const char *addr, struct libelf_state *state)
                                        addr + file_offset,
                                        copy_size);
                         }
-                        mm_free_page(vpaddr, 1);
+                        mm_free_page_active(vpaddr, 1);
                         mm_map_page(state->address_space,
                                     vaddr,
                                     paddr,
