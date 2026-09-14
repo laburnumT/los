@@ -12,6 +12,7 @@ target_include_directories(
 )
 
 add_subdirectory(arch/${LOS_ARCH})
+add_subdirectory(fs)
 
 add_executable(
   los.kernel
@@ -35,6 +36,7 @@ target_link_libraries(
   libk
   libelfk
   ${LOS_ARCH}
+  fs
   gcc
   "-Wl,--end-group"
 )
