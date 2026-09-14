@@ -18,11 +18,13 @@ QualifierOrder: ['inline', 'static', 'constexpr', 'volatile', 'const', 'restrict
 IncludeBlocks: Regroup
 IncludeCategories:
   - Regex:           '^"(.*)\.h'
-    Priority:        3
+    Priority:        4
   - Regex:           '^<kernel/.*\.h>$'
     Priority:        2
+  - Regex:           '^<drivers/.*\.h>$'
+    Priority:        3
   - Regex:           '^<.*\.h>$'
     Priority:        1
   - Regex:           '.*'
-    Priority:        4
+    Priority:        5
 IncludeIsMainRegex: ''
