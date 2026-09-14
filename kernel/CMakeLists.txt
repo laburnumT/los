@@ -1,6 +1,15 @@
 add_compile_definitions(__is_kernel)
 
-include_directories(include)
+add_library(
+  kernel_headers
+  INTERFACE
+)
+
+target_include_directories(
+  kernel_headers
+  INTERFACE
+  include
+)
 
 add_subdirectory(arch/${LOS_ARCH})
 
@@ -21,20 +30,11 @@ target_link_libraries(
   los.kernel
   PRIVATE
 
+  kernel_headers
   "-Wl,--start-group"
   libk
+  libelfk
   ${LOS_ARCH}
   gcc
   "-Wl,--end-group"
-)
-
-add_library(
-  kernel_headers
-  INTERFACE
-)
-
-target_include_directories(
-  kernel_headers
-  INTERFACE
-  include
 )

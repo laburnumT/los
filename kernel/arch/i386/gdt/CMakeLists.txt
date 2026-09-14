@@ -7,6 +7,8 @@ add_library(
 
 target_link_libraries(
   gdt
+  PRIVATE
+  kernel_headers
   lib_headers
   ${LOS_ARCH}
 )

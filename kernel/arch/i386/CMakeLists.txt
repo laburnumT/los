@@ -29,14 +29,15 @@ add_library(
 
 target_link_libraries(
   ${LOS_ARCH}
-  PUBLIC
+  PRIVATE
   ${LOS_ARCH}_drivers
-  libk
+  kernel_headers
   lib_headers
   gdt
   interrupt
   mm
   syscall
+  libelfk
   ${CMAKE_CURRENT_SOURCE_DIR}/crti.s
   ${CRTBEGIN_O}
   ${CRTEND_O}

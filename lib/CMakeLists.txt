@@ -1,3 +1,14 @@
+add_library(
+  lib_headers
+  INTERFACE
+)
+
+target_include_directories(
+  lib_headers
+  INTERFACE
+  include
+)
+
 add_subdirectory(elf)
 add_subdirectory(arch/${LOS_ARCH})
 
@@ -18,31 +29,11 @@ target_compile_definitions(
 
 target_link_libraries(
   libk
-  PUBLIC
+  PRIVATE
+  lib_headers
+  kernel_headers
   libk_${LOS_ARCH}
   libelfk
-)
-
-target_link_options(
-  libk
-  PRIVATE
-)
-
-target_include_directories(
-  libk
-  PUBLIC
-  include
-)
-
-add_library(
-  lib_headers
-  INTERFACE
-)
-
-target_include_directories(
-  lib_headers
-  INTERFACE
-  include
 )
 
 add_library(
@@ -62,17 +53,7 @@ target_compile_definitions(
 
 target_link_libraries(
   libc
-  PUBLIC
-  libc_${LOS_ARCH}
-)
-
-target_link_options(
-  libc
   PRIVATE
-)
-
-target_include_directories(
-  libc
-  PUBLIC
-  include
+  lib_headers
+  libc_${LOS_ARCH}
 )

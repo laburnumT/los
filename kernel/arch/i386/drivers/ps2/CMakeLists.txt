@@ -7,6 +7,7 @@ add_library(
 target_link_libraries(
   ps2
   PRIVATE
+  kernel_headers
   lib_headers
   ${LOS_ARCH}
 )

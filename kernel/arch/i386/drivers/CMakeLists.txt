@@ -13,5 +13,6 @@ target_link_libraries(
   ${LOS_ARCH}_drivers
   PRIVATE
   ps2
-  libk
+  kernel_headers
+  lib_headers
 )

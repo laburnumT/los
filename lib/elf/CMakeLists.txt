@@ -1,25 +1,17 @@
-include_directories(include)
-
 add_library(
   libelfk
   elf.c
 )
 
-target_compile_definitions(
-  libelfk
-  PRIVATE
-  __is_libk
-)
-
 target_link_libraries(
   libelfk
-  PUBLIC
+  PRIVATE
   lib_headers
-  libk
+  kernel_headers
 )
 
 target_include_directories(
   libelfk
-  INTERFACE
+  PUBLIC
   include
 )

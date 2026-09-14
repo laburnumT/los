@@ -14,6 +14,8 @@ add_library(
 
 target_link_libraries(
   interrupt
+  PRIVATE
+  kernel_headers
   lib_headers
   ${LOS_ARCH}
 )

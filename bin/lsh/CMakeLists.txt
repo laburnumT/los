@@ -8,9 +8,15 @@ add_executable(
   main.c
 )
 
+target_include_directories(
+  lsh
+  PRIVATE
+  include
+)
+
 target_link_libraries(
   lsh
-  PUBLIC
+  PRIVATE
   lib_headers
   libc
   gcc
@@ -23,7 +29,7 @@ target_link_libraries(
 
 target_link_options(
   lsh
-  PUBLIC
+  PRIVATE
   -pie
   # -T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld
   -nostdlib

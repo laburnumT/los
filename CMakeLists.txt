@@ -36,7 +36,7 @@ add_subdirectory(kernel)
 
 target_link_libraries(
   los.kernel
-  PUBLIC
+  PRIVATE
   lib_headers
 )
 

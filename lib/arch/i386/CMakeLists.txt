@@ -5,7 +5,7 @@ add_library(
 
 target_link_libraries(
   libk_${LOS_ARCH}
-  PUBLIC
+  PRIVATE
   kernel_headers
 )
 
@@ -21,6 +21,12 @@ add_library(
   c_stdio.c
   c_stdlib.s
   c_stdtimer.s
+)
+
+target_link_libraries(
+  libc_${LOS_ARCH}
+  PRIVATE
+  lib_headers
 )
 
 target_compile_definitions(
