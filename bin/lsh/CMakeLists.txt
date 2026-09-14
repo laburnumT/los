@@ -41,3 +41,11 @@ set_target_properties(
   PROPERTIES
   OUTPUT_NAME lsh
 )
+
+add_custom_command(
+  TARGET lsh POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E make_directory ${ROOTFS_DIR}/bin
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:lsh>
+    ${ROOTFS_DIR}/bin/lsh
+)

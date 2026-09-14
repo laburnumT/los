@@ -4,7 +4,7 @@ set -euo pipefail
 
 EXTRA_FLAGS=""
 DEBUG_FLAGS=""
-MODE="-kernel kernel/los.kernel"
+MODE="-kernel kernel/los.kernel -initrd root.romfs"
 
 main() {
         "qemu-system-i386" \

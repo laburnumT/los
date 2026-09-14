@@ -47,3 +47,19 @@ add_custom_target(
   ${CMAKE_CURRENT_SOURCE_DIR}/scripts
   ${CMAKE_CURRENT_BINARY_DIR}/scripts
 )
+
+add_custom_command(
+  OUTPUT ${CMAKE_BINARY_DIR}/root.romfs
+  COMMAND genromfs -d ${ROOTFS_DIR} -f ${CMAKE_BINARY_DIR}/root.romfs
+  DEPENDS lsh
+)
+
+add_custom_target(
+  initrd
+  DEPENDS ${CMAKE_BINARY_DIR}/root.romfs
+)
+
+add_dependencies(
+  los.kernel
+  initrd
+)

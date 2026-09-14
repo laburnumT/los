@@ -1,7 +1,7 @@
 #include "init.h"
 
-#include <libelf.h>
 #include <_dynarray.h>
+#include <_helper.h>
 #include <mm/mm.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -85,19 +85,6 @@ static void get_boot_info(uintptr_t mb_info_loc, uint32_t magic,
                 printf("0x%X not a valid grub magic number\n", magic);
                 panic();
         }
-}
-
-void jump_to_userspace(unsigned char *exec, size_t stack_size)
-{
-        struct libelf_state state;
-        libelf_load_elf(exec, &state);
-
-        mm_switch_address_space(state.address_space);
-
-        unsigned char *user_stack = k_malloc(stack_size, MM_GP_USER | MM_GP_RW);
-
-        jump_ring((void *)state.entry,
-                  (void *)((uintptr_t)(user_stack + stack_size) & ~0xF));
 }
 
 static struct module *parse_modules(size_t mod_cnt, uintptr_t mod_addr)
