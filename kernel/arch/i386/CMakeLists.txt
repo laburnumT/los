@@ -15,8 +15,8 @@ execute_process(
 add_subdirectory(gdt)
 add_subdirectory(interrupt)
 add_subdirectory(mm)
-add_subdirectory(ps2)
 add_subdirectory(syscall)
+add_subdirectory(drivers)
 
 add_library(
   ${LOS_ARCH}
@@ -24,21 +24,18 @@ add_library(
   cpu.s
   init.c
   panic.c
-  pit.c
-  port.c
   timer.c
-  tty.c
 )
 
 target_link_libraries(
   ${LOS_ARCH}
   PUBLIC
+  ${LOS_ARCH}_drivers
   libk
   lib_headers
   gdt
   interrupt
   mm
-  ps2
   syscall
   ${CMAKE_CURRENT_SOURCE_DIR}/crti.s
   ${CRTBEGIN_O}

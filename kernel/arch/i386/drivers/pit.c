@@ -1,9 +1,8 @@
-#include "pit.h"
-
 #include <stdint.h>
 #include <stdio.h>
 
-#include "port.h"
+#include <drivers/pit.h>
+#include <drivers/port.h>
 
 enum { PIT_FREQUENCY = 1193182 };
 

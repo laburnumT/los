@@ -5,8 +5,8 @@
 
 #include <kernel/tty.h>
 
-#include "port.h"
-#include "vga.h"
+#include <drivers/port.h>
+#include <drivers/vga.h>
 
 static size_t terminal_row;
 static size_t terminal_column;

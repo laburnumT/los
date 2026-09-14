@@ -12,9 +12,10 @@
 #include <kernel/syscall.h>
 #include <kernel/timer.h>
 
+#include <drivers/ps2.h>
+
 #include "gdt.h"
 #include "idt.h"
-#include "ps2.h"
 #include "stdlib.h"
 
 static void get_boot_info_1(uintptr_t mb_info_loc)

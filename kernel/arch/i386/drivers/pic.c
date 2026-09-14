@@ -1,8 +1,7 @@
-#include "pic.h"
-
 #include <stdint.h>
 
-#include "port.h"
+#include <drivers/pic.h>
+#include <drivers/port.h>
 
 enum : uint16_t {
         PIC1_COMMAND = 0x20,

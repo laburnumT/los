@@ -5,9 +5,10 @@
 
 #include <kernel/interrupt.h>
 
+#include <drivers/pic.h>
+
 #include "gdt.h"
 #include "interrupt.h"
-#include "pic.h"
 
 static struct {
         uint16_t size;

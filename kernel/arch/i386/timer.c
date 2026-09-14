@@ -3,11 +3,12 @@
 
 #include <kernel/timer.h>
 
+#include <drivers/pic.h>
+#include <drivers/pit.h>
+
 #include "context.h"
 #include "idt.h"
 #include "interrupt.h"
-#include "pic.h"
-#include "pit.h"
 
 static volatile size_t LOS_TIMER = 0;
 

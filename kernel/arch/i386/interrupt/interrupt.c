@@ -6,10 +6,11 @@
 
 #include <kernel/panic.h>
 
+#include <drivers/pic.h>
+
 #include "context.h"
 #include "idt.h"
 #include "mm.h"
-#include "pic.h"
 
 static void (*isr_handlers[256])(struct interrupt_stack_frame *frame) = {};
 

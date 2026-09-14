@@ -1,13 +1,13 @@
-#include "ps2.h"
-
 #include <stdint.h>
 #include <stdio.h>
+
+#include <drivers/pic.h>
+#include <drivers/port.h>
+#include <drivers/ps2.h>
 
 #include "context.h"
 #include "idt.h"
 #include "interrupt.h"
-#include "pic.h"
-#include "port.h"
 
 enum ps2_port : uint16_t {
         PS2_DATA_PORT    = 0x60,
