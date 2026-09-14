@@ -33,6 +33,6 @@ struct tss_entry {
         uint16_t iomap_base;
 } __attribute__((__packed__));
 
-struct tss_entry tss;
+extern struct tss_entry tss;
 
 #endif

@@ -41,6 +41,7 @@ enum : uint8_t {
 };
 
 static struct gdt gdt;
+struct tss_entry tss;
 
 static struct {
         uint16_t size;
