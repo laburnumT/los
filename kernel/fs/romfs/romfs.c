@@ -183,6 +183,27 @@ static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
                 if (strcmp(file_name, name))
                         continue;
 
+                size_t data_offset =
+                    (offset + sizeof(hdr) + strlen(name) + 1 + 15) / 16 * 16;
+
+                {
+                        unsigned char *data_checksum =
+                            malloc(data_offset - offset);
+                        if (!data_checksum)
+                                return VFS_ERR_NO_MEMORY;
+                        defer
+                        {
+                                free(data_checksum);
+                        };
+                        err = vfs_iface_read_bytes(
+                            iface, offset, data_offset - offset, data_checksum);
+                        if (err)
+                                return err;
+                        if (get_checksum(data_checksum, data_offset - offset) !=
+                            read_big_endian(hdr.checksum))
+                                return VFS_ERR_CHECKSUM;
+                }
+
                 struct vfs_node *new_node = malloc(sizeof(*new_node));
                 if (!new_node)
                         return VFS_ERR_NO_MEMORY;
@@ -199,11 +220,9 @@ static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
                         new_node->private.offset = offset;
                         break;
                 case ROMFS_FT_REGULAR_FILE:
-                        new_node->type = VFS_FT_FILE;
-                        new_node->ops  = &romfs_file_ops;
-                        new_node->private.offset =
-                            (offset + sizeof(hdr) + strlen(name) + 1 + 15) /
-                            16 * 16;
+                        new_node->type           = VFS_FT_FILE;
+                        new_node->ops            = &romfs_file_ops;
+                        new_node->private.offset = data_offset;
                         break;
                 case ROMFS_FT_HARD_LINK:
                 case ROMFS_FT_SYMLINK:

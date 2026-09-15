@@ -24,6 +24,7 @@ enum vfs_err {
         VFS_ERR_OP_NOT_SUPPORTED  = -5,
         VFS_ERR_NOT_FOUND         = -6,
         VFS_ERR_CORRUPT           = -7,
+        VFS_ERR_CHECKSUM          = -8,
 };
 
 struct vfs_dev_iface {
