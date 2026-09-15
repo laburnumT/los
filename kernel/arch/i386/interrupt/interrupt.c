@@ -4,11 +4,13 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include <kernel/interrupt.h>
 #include <kernel/panic.h>
 
 #include <drivers/pic.h>
 
 #include "context.h"
+#include "cpu.h"
 #include "idt.h"
 #include "mm.h"
 
@@ -62,6 +64,11 @@ static void interrupt_cpu_14(struct interrupt_stack_frame *frame)
                 mm_get_page_info((void *)error_address);
 
         panic();
+}
+
+uint8_t interrupt_check_enabled(void)
+{
+        return get_eflags() & 0x200;
 }
 
 void interrupt_exception_handler(struct interrupt_stack_frame *frame)
