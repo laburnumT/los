@@ -39,20 +39,6 @@ struct romfs_file_header {
         char file_name[]; // Null terminated and padded to 16 bytes
 } __attribute__((packed));
 
-struct romfs_file_info {
-        uint32_t next_offset;
-        uint32_t data_offset;
-        union {
-                uint32_t offset_dir;
-                uint32_t offset_link;
-                uint32_t info;
-        };
-        size_t size;
-        char *name;
-        enum romfs_file_type type;
-        uint8_t is_executable;
-};
-
 static int romfs_read(struct vfs_node *node, size_t offset, size_t size,
                       void *buffer);
 static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
