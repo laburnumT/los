@@ -40,24 +40,44 @@ void kernel_main(void *boot_info, unsigned int magic)
         unsigned char *exec = nullptr;
 
         for (size_t i = 0; i < los_arr_len(mods); ++i) {
-                if (mods[i].type == MOD_ROMFS) {
-                        struct vfs_dev_iface iface = {
-                            .block_size = 1,
-                            .private.ptr =
-                                &(struct ram_ctx){
-                                    .start = mods[i].addr,
-                                    .len   = mods[i].len,
-                                },
-                            .read = read,
-                        };
-                        struct vfs_mount *mount = nullptr;
-                        vfs_mount(VFS_FS_ROMFS, &iface, &mount);
-                        struct vfs_file *fp = nullptr;
-                        vfs_open(mount->root, exec_name, &fp);
-                        exec = malloc(fp->node->size);
-                        vfs_read(fp, exec, fp->node->size);
-                        vfs_close(fp);
+                if (mods[i].type != MOD_ROMFS)
+                        continue;
+
+                struct vfs_dev_iface iface = {
+                    .block_size = 1,
+                    .private.ptr =
+                        &(struct ram_ctx){
+                            .start = mods[i].addr,
+                            .len   = mods[i].len,
+                        },
+                    .read = read,
+                };
+                struct vfs_mount *mount = nullptr;
+                if (vfs_mount(VFS_FS_ROMFS, &iface, &mount)) {
+                        puts("Failed to mount romfs filesystem");
+                        panic();
                 }
+
+                struct vfs_file *fp = nullptr;
+                if (vfs_open(mount->root, exec_name, &fp)) {
+                        printf("Failed to open %s\n", exec_name);
+                        panic();
+                }
+                exec = malloc(fp->node->size);
+                if (!exec) {
+                        printf("Failed to allocate %zu bytes\n",
+                               fp->node->size);
+                        panic();
+                }
+                if (vfs_read(fp, exec, fp->node->size) < 0) {
+                        printf("Failed to read %s\n", exec_name);
+                        panic();
+                }
+                if (vfs_close(fp)) {
+                        printf("Failed to close %s\n", exec_name);
+                        panic();
+                }
+                break;
         }
 
         struct libelf_state state1;
