@@ -67,8 +67,9 @@ los_queue_resize_helper(struct los_queue_header *header, size_t elem_size)
                 auto q         = (queue);                                      \
                 typeof(*q) ret = {};                                           \
                 if (q && los_queue_size(q) > 0) {                              \
-                        auto header = (struct los_queue_header *)q - 1;        \
-                        ret         = q[header->head++];                       \
+                        auto header  = (struct los_queue_header *)q - 1;       \
+                        ret          = q[header->head];                        \
+                        header->head = (header->head + 1) % header->size;      \
                 }                                                              \
                 ret;                                                           \
         })
