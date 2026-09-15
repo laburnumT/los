@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 
 #include <kernel/keyboard.h>
 
@@ -124,9 +125,10 @@ static const enum keyboard_code scan2_key_map[] = {
 
 enum keyboard_code keyboard_controller_receive_key(void)
 {
-        uint8_t code = ps2_receive_byte();
-        if (code == PS2_KEYBOARD_COMAND_SCAN_CODE)
-                return scan2_key_map[ps2_receive_byte()] + KEYBOARD_A_RELEASE;
+        uint8_t code = ps2_receive_byte(1);
+        if (code == PS2_KEYBOARD_COMAND_SCAN_CODE) {
+                return scan2_key_map[ps2_receive_byte(1)] + KEYBOARD_A_RELEASE;
+        }
 
         return scan2_key_map[code];
 }
@@ -136,8 +138,8 @@ uint8_t ps2_scan_code_get(void)
         do {
                 ps2_send_byte(PS2_KEYBOARD_COMAND_SCAN_CODE, 1);
                 ps2_send_byte(0x00, 1);
-        } while (ps2_receive_byte() != 0xFA);
-        return ps2_receive_byte();
+        } while (ps2_receive_byte(1) != 0xFA);
+        return ps2_receive_byte(1);
 }
 
 void ps2_scan_code_set(uint8_t set)
@@ -147,5 +149,5 @@ void ps2_scan_code_set(uint8_t set)
         do {
                 ps2_send_byte(PS2_KEYBOARD_COMAND_SCAN_CODE, 1);
                 ps2_send_byte(set, 1);
-        } while (ps2_receive_byte() != 0xFA);
+        } while (ps2_receive_byte(1) != 0xFA);
 }
