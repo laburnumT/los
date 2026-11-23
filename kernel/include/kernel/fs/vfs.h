@@ -1,6 +1,7 @@
 #ifndef LOS_KERNEL_FS_VFS_H
 #define LOS_KERNEL_FS_VFS_H
 
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -25,6 +26,7 @@ enum vfs_err {
         VFS_ERR_NOT_FOUND         = -6,
         VFS_ERR_CORRUPT           = -7,
         VFS_ERR_CHECKSUM          = -8,
+        VFS_ERR_BUSY              = -9,
 };
 
 struct vfs_dev_iface {
@@ -41,6 +43,8 @@ struct vfs_mount {
         enum vfs_filesystem fs_type;
         struct vfs_node *root;
         struct vfs_dev_iface *iface;
+        struct vfs_vnode_table *table;
+        atomic_size_t ref_cnt;
 };
 
 struct vfs_node {
@@ -52,6 +56,8 @@ struct vfs_node {
                 void *ptr;
                 size_t offset;
         } private;
+        size_t vfs_id;
+        atomic_size_t ref_cnt;
 };
 
 struct vfs_ops {
@@ -64,6 +70,7 @@ struct vfs_ops {
 struct vfs_file {
         struct vfs_node *node;
         size_t offset;
+        atomic_size_t ref_cnt;
 };
 
 enum vfs_err vfs_mount(enum vfs_filesystem fs_type, struct vfs_dev_iface *iface,
@@ -79,5 +86,17 @@ enum vfs_err vfs_lookup(struct vfs_node *root, const char *path,
 
 enum vfs_err vfs_iface_read_bytes(struct vfs_dev_iface *iface, size_t offset,
                                   size_t size, void *buffer);
+
+struct vfs_node *vfs_lookup_table_find(const struct vfs_mount *mnt,
+                                       size_t vfs_id);
+void vfs_lookup_table_add(struct vfs_mount *mnt, struct vfs_node *node);
+void vfs_lookup_table_remove(struct vfs_mount *mnt,
+                             const struct vfs_node *node);
+
+struct vfs_node *vfs_node_ref(struct vfs_node *node);
+struct vfs_node *vfs_node_ref_init(struct vfs_node *node);
+void vfs_node_unref(struct vfs_node *node);
+struct vfs_file *vfs_file_ref(struct vfs_file *file);
+void vfs_file_unref(struct vfs_file *file);
 
 #endif

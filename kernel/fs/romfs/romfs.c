@@ -1,4 +1,5 @@
 #include <_helper.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -190,9 +191,16 @@ static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
                                 return VFS_ERR_CHECKSUM;
                 }
 
-                struct vfs_node *new_node = malloc(sizeof(*new_node));
+                auto new_node = vfs_lookup_table_find(node->mnt, offset);
+                if (new_node) {
+                        *ret = new_node;
+                        return VFS_ERR_OK;
+                }
+
+                new_node = malloc(sizeof(*new_node));
                 if (!new_node)
                         return VFS_ERR_NO_MEMORY;
+                atomic_init(&new_node->ref_cnt, 0);
 
                 enum romfs_file_type type =
                     read_big_endian(hdr.next_offset) & ROMFS_OFFSET_TYPE;
@@ -204,11 +212,13 @@ static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
                         new_node->type           = VFS_FT_DIR;
                         new_node->ops            = &romfs_dir_ops;
                         new_node->private.offset = offset;
+                        new_node->vfs_id         = offset;
                         break;
                 case ROMFS_FT_REGULAR_FILE:
                         new_node->type           = VFS_FT_FILE;
                         new_node->ops            = &romfs_file_ops;
                         new_node->private.offset = data_offset;
+                        new_node->vfs_id         = offset;
                         break;
                 case ROMFS_FT_HARD_LINK:
                 case ROMFS_FT_SYMLINK:
@@ -261,6 +271,7 @@ enum vfs_err romfs_mount(struct vfs_dev_iface *iface, struct vfs_mount **ret)
         if (!mnt)
                 return VFS_ERR_NO_MEMORY;
 
+        atomic_init(&mnt->ref_cnt, 0);
         mnt->fs_type = VFS_FS_ROMFS;
         mnt->iface   = iface;
 
@@ -294,7 +305,9 @@ enum vfs_err romfs_mount(struct vfs_dev_iface *iface, struct vfs_mount **ret)
         root->mnt            = mnt;
         root->ops            = &romfs_dir_ops;
         root->private.offset = root_offset;
+        root->vfs_id         = root_offset;
         root->size           = 0;
+        atomic_init(&root->ref_cnt, 0);
 
         mnt->root = root;
 
