@@ -1,6 +1,9 @@
 #ifndef LOS_LIB__HELPER_H
 #define LOS_LIB__HELPER_H
 
+#include <stddef.h>
+#include <stdint.h>
+
 #define __MACRO_PLACEHOLDER_1 1,
 
 #define __lambda_false(__x, y, ...) y
@@ -46,5 +49,14 @@
 
 #define max(x, y) (x) > (y) ? (x) : (y)
 #define min(x, y) (x) < (y) ? (x) : (y)
+
+inline static uint8_t is_between_cyclic(size_t start, size_t end, size_t val)
+{
+        if (start == end)
+                return start == val;
+        if (start < end)
+                return start <= val && val <= end;
+        return start <= val || val <= end;
+}
 
 #endif
