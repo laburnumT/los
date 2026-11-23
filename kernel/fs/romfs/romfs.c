@@ -53,7 +53,7 @@ static uint32_t read_big_endian(uint32_t x)
 #else
 static uint32_t read_big_endian(uint32_t x)
 {
-        (void)x;
+        return x;
 }
 #endif
 
