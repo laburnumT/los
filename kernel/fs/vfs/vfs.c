@@ -38,7 +38,7 @@ enum vfs_err vfs_lookup(struct vfs_node *root, const char *path,
                 return VFS_ERR_INVALID_FILE_TYPE;
 
         if (*path == '/') {
-                root = root->mount->root;
+                root = root->mnt->root;
                 for (; *path == '/'; ++path)
                         ;
         }
@@ -113,15 +113,16 @@ enum vfs_err vfs_mount(enum vfs_filesystem fs_type, struct vfs_dev_iface *iface,
         }
 }
 
-enum vfs_err vfs_unmount(struct vfs_mount *mount)
+enum vfs_err vfs_unmount(struct vfs_mount *mnt)
 {
-        if (!mount)
+        if (!mnt)
                 return VFS_ERR_INVALID_ARG;
-        if (mount->root) {
-                free(mount->root);
-                mount->root = nullptr;
+        if (mnt->root) {
+                free(mnt->root);
+                mnt->root = nullptr;
         }
-        free(mount);
+
+        free(mnt);
 
         return VFS_ERR_OK;
 }

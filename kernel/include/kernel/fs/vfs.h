@@ -47,7 +47,7 @@ struct vfs_node {
         enum vfs_filetype type;
         size_t size;
         const struct vfs_ops *ops;
-        struct vfs_mount *mount;
+        struct vfs_mount *mnt;
         union {
                 void *ptr;
                 size_t offset;
@@ -68,7 +68,7 @@ struct vfs_file {
 
 enum vfs_err vfs_mount(enum vfs_filesystem fs_type, struct vfs_dev_iface *iface,
                        struct vfs_mount **ret);
-enum vfs_err vfs_unmount(struct vfs_mount *mount);
+enum vfs_err vfs_unmount(struct vfs_mount *mnt);
 enum vfs_err vfs_open(struct vfs_node *root, const char *path,
                       struct vfs_file **ret);
 enum vfs_err vfs_close(struct vfs_file *file);

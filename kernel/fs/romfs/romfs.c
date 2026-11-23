@@ -125,7 +125,7 @@ static int romfs_read(struct vfs_node *node, size_t offset, size_t size,
 
         size = min(size, node->size - offset);
 
-        auto iface         = node->mount->iface;
+        auto iface         = node->mnt->iface;
         auto file_offset   = node->private.offset;
         size_t true_offset = file_offset + offset;
 
@@ -144,7 +144,7 @@ static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
         if (node->type != VFS_FT_DIR)
                 return VFS_ERR_INVALID_FILE_TYPE;
 
-        auto iface = node->mount->iface;
+        auto iface = node->mnt->iface;
         struct romfs_file_header dir_hdr;
         auto err = vfs_iface_read_bytes(
             iface, node->private.offset, sizeof(dir_hdr), &dir_hdr);
@@ -196,8 +196,8 @@ static enum vfs_err romfs_lookup(struct vfs_node *node, const char *name,
 
                 enum romfs_file_type type =
                     read_big_endian(hdr.next_offset) & ROMFS_OFFSET_TYPE;
-                new_node->mount = node->mount;
-                new_node->size  = read_big_endian(hdr.size);
+                new_node->mnt  = node->mnt;
+                new_node->size = read_big_endian(hdr.size);
 
                 switch (type) {
                 case ROMFS_FT_DIR:
@@ -257,25 +257,25 @@ enum vfs_err romfs_mount(struct vfs_dev_iface *iface, struct vfs_mount **ret)
         if (!romfs_is_valid(iface))
                 return VFS_ERR_CORRUPT;
 
-        struct vfs_mount *mount = malloc(sizeof(*mount));
-        if (!mount)
+        struct vfs_mount *mnt = malloc(sizeof(*mnt));
+        if (!mnt)
                 return VFS_ERR_NO_MEMORY;
 
-        mount->fs_type = VFS_FS_ROMFS;
-        mount->iface   = iface;
+        mnt->fs_type = VFS_FS_ROMFS;
+        mnt->iface   = iface;
 
         struct romfs_fs_header fs_header;
         auto err =
             vfs_iface_read_bytes(iface, 0, sizeof(fs_header), &fs_header);
         if (err) {
-                free(mount);
+                free(mnt);
                 return err;
         }
 
         char *volume_name = nullptr;
         err = romfs_read_name(iface, sizeof(fs_header), &volume_name);
         if (err) {
-                free(mount);
+                free(mnt);
                 return err;
         }
 
@@ -286,18 +286,18 @@ enum vfs_err romfs_mount(struct vfs_dev_iface *iface, struct vfs_mount **ret)
 
         struct vfs_node *root = malloc(sizeof(*root));
         if (!root) {
-                free(mount);
+                free(mnt);
                 return VFS_ERR_NO_MEMORY;
         }
 
         root->type           = VFS_FT_DIR;
-        root->mount          = mount;
+        root->mnt            = mnt;
         root->ops            = &romfs_dir_ops;
         root->private.offset = root_offset;
         root->size           = 0;
 
-        mount->root = root;
+        mnt->root = root;
 
-        *ret = mount;
+        *ret = mnt;
         return VFS_ERR_OK;
 }
